@@ -1,0 +1,42 @@
+services:
+  picture_archive.import.processor:
+    class: PictureArchiveBundle\Import\Processor
+    arguments:
+      - '@logger'
+      - '@doctrine.orm.entity_manager'
+      - '@picture_archive.file.scanner'
+      - '@picture_archive.index.file_processor'
+      - '@picture_archive.image.info'
+      - '@picture_archive.file.hash'
+      - '%picture_archive.import%'
+
+  picture_archive.file.scanner:
+    class: PictureArchiveBundle\Util\FileScanner
+
+  picture_archive.file.hash:
+    class: PictureArchiveBundle\Util\FileHash\Md5
+
+  picture_archive.image.info:
+    class: PictureArchiveBundle\Util\ImageExif
+    arguments:
+      - '%picture_archive.image.info.exec%'
+
+  picture_archive.index.file_processor:
+    class: PictureArchiveBundle\Index\FileProcessor
+
+  picture_archive.index.statistics:
+    class: PictureArchiveBundle\Index\Stats
+    arguments:
+      - '@doctrine.orm.entity_manager'
+
+  picture_archive.index.processor:
+    class: PictureArchiveBundle\Index\Processor
+    arguments:
+      - '@logger'
+      - '@doctrine.orm.entity_manager'
+      - '@picture_archive.file.scanner'
+      - '@picture_archive.image.info'
+      - '@picture_archive.file.hash'
+      -
+        base_directory: "%picture_archive.base_directory%"
+        type_path: "%picture_archive.type_path%"

@@ -1,0 +1,7 @@
+pa_app:
+    resource: "@PictureArchiveBundle/Resources/config/routing.yml"
+    prefix:   /
+
+app:
+    resource: '@PictureArchiveBundle/Controller/'
+    type: annotation
