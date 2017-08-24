@@ -20,36 +20,77 @@ class Configuration implements ConfigurationInterface
      * @return TreeBuilder
      * @throws \RuntimeException
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('pa_app');
+        $rootNode = $treeBuilder->root('picture_archive');
 
         $rootNode
             ->children()
-            ->append($this->getFileScannerNode())
+            ->append($this->getArchiveNode())
+            ->append($this->getImportNode())
+            ->append($this->getToolsNode())
             ->end();
 
         return $treeBuilder;
     }
 
+    private function getArchiveNode()
+    {
+        $builder = new TreeBuilder();
+        $node = $builder->root('archive');
+        $node
+            ->info('archive configuration')
+            ->children()
+                ->scalarNode('base_directory')->isRequired()->defaultNull()->end()
+                ->arrayNode('filetype_subdirectory')
+                    ->children()
+                        ->scalarNode('images')->isRequired()->end()
+                        ->scalarNode('videos')->isRequired()->end()
+                    ->end()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
     /**
      * @return NodeDefinition
+     * @throws \RuntimeException
      */
-    private function getFileScannerNode()
+    private function getImportNode(): NodeDefinition
     {
         $builder = new TreeBuilder();
         $node = $builder->root('import');
         $node
-            ->info('file scanner config')
+            ->info('import configuration')
             ->children()
-            ->arrayNode('supported_types')
+                ->scalarNode('base_directory')->isRequired()->defaultNull()->end()
+                ->scalarNode('failed_directory')->isRequired()->defaultNull()->end()
+                ->arrayNode('supported_types')
+                    ->children()
+                        ->scalarNode('images')->isRequired()->end()
+                        ->scalarNode('videos')->isRequired()->end()
+                    ->end()
+                ->end()
+                ->integerNode('minimum_fileage')->isRequired()->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * @return NodeDefinition
+     * @throws \RuntimeException
+     */
+    private function getToolsNode(): NodeDefinition
+    {
+        $builder = new TreeBuilder();
+        $node = $builder->root('tools');
+        $node
+            ->info('tool configuration')
             ->children()
-            ->scalarNode('image')->isRequired()->end()
-            ->scalarNode('video')->isRequired()->end()
-            ->end()
-            ->end()
-            ->integerNode('minimum_fileage')->isRequired()->end()
+                ->scalarNode('image_info')->isRequired()->defaultNull()->end()
             ->end();
 
         return $node;

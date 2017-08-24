@@ -1,17 +1,58 @@
 services:
-  picture_archive.import.processor:
-    class: PictureArchiveBundle\Import\Processor
+  picture_archive.component.configuration:
+    class: PictureArchiveBundle\Component\Configuration
+    calls:
+      - [ setArchiveBaseDirectory, ["%picture_archive.archive.base_directory%"] ]
+      - [ setArchiveFiletypeSubdirectory, ["%picture_archive.archive.filetype_subdirectory%"] ]
+      - [ setImportBaseDirectory, ["%picture_archive.import.base_directory%"]]
+      - [ setImportFailedDirectory, ["%picture_archive.import.failed_directory%"]]
+      - [ setImportMinimumFileAge, ["%picture_archive.import.minimum_fileage%"]]
+      - [ setImportSupportedTypes, ["%picture_archive.import.supported_types%"]]
+      - [ setTools, ["%picture_archive.tools%"]]
+
+  picture_archive.import:
+    class: PictureArchiveBundle\Service\Import
     arguments:
-      - '@logger'
-      - '@doctrine.orm.entity_manager'
-      - '@picture_archive.file.scanner'
-      - '@picture_archive.index.file_processor'
-      - '@picture_archive.image.info'
-      - '@picture_archive.file.hash'
-      - '%picture_archive.import%'
+      - "@doctrine.orm.entity_manager"
+      - "@picture_archive.import.file_runner"
+      - "@picture_archive.index.file_processor"
+      - "@picture_archive.import.analyser"
+      - "@picture_archive.file.hash"
+      - "@picture_archive.component.configuration"
+      - "@logger"
+
+  picture_archive.import.file_runner:
+    class: PictureArchiveBundle\Service\Import\FileRunner
+    arguments:
+      - "@picture_archive.component.configuration"
+
+  picture_archive.import.analyser:
+    class: PictureArchiveBundle\Service\Import\Analyser
+    calls:
+      - [ addAnalyser, ["@picture_archive.import.analyser.file_min_age"]]
+      - [ addAnalyser, ["@picture_archive.import.analyser.file_min_age"]]
+      - [ addAnalyser, ["@picture_archive.import.analyser.file_exixts"]]
+
+  picture_archive.import.analyser.file_min_age:
+    class: PictureArchiveBundle\Service\Import\Analyser\FileMinAge
+    arguments:
+      - "@picture_archive.component.configuration"
+
+  picture_archive.import.analyser.mime_type:
+      class: PictureArchiveBundle\Service\Import\Analyser\MimeType
+      arguments:
+        - "@picture_archive.component.configuration"
+
+  picture_archive.import.analyser.file_exixts:
+    class: PictureArchiveBundle\Service\Import\Analyser\FileExists
+    arguments:
+      - "@picture_archive.component.configuration"
+      - "@picture_archive.file.hash"
+      - "@=service('doctrine.orm.default_entity_manager').getRepository('PictureArchiveBundle:File')"
 
   picture_archive.file.scanner:
     class: PictureArchiveBundle\Util\FileScanner
+
 
   picture_archive.file.hash:
     class: PictureArchiveBundle\Util\FileHash\Md5
@@ -19,24 +60,24 @@ services:
   picture_archive.image.info:
     class: PictureArchiveBundle\Util\ImageExif
     arguments:
-      - '%picture_archive.image.info.exec%'
+      - "%picture_archive.tool.image.info%"
 
   picture_archive.index.file_processor:
-    class: PictureArchiveBundle\Index\FileProcessor
+    class: PictureArchiveBundle\Service\Index\FileProcessor
 
   picture_archive.index.statistics:
-    class: PictureArchiveBundle\Index\Stats
+    class: PictureArchiveBundle\Service\Index\Stats
     arguments:
-      - '@doctrine.orm.entity_manager'
+      - "@doctrine.orm.entity_manager"
 
-  picture_archive.index.processor:
-    class: PictureArchiveBundle\Index\Processor
-    arguments:
-      - '@logger'
-      - '@doctrine.orm.entity_manager'
-      - '@picture_archive.file.scanner'
-      - '@picture_archive.image.info'
-      - '@picture_archive.file.hash'
-      -
-        base_directory: "%picture_archive.base_directory%"
-        type_path: "%picture_archive.type_path%"
+#  picture_archive.index.processor:
+#    class: PictureArchiveBundle\Service\Index\Processor
+#    arguments:
+#      - "@logger"
+#      - "@doctrine.orm.entity_manager"
+#      - "@picture_archive.file.scanner"
+#      - "@picture_archive.image.info"
+#      - "@picture_archive.file.hash"
+#      -
+#        base_directory: "%picture_archive.archive.base_directory%"
+#        type_path: ["%picture_archive.archive.path.videos%", "%picture_archive.archive.path.images%"]

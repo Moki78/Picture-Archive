@@ -3,7 +3,7 @@
 namespace PictureArchiveBundle\Repository;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use PictureArchiveBundle\Entity\File;
+use PictureArchiveBundle\Entity\MediaFile;
 
 /**
  * FilesRepository
@@ -24,14 +24,14 @@ class FilesRepository extends \Doctrine\ORM\EntityRepository
 
     /**
      * @param string $filepath
-     * @return File|null
+     * @return MediaFile|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function findByFilepath($filepath)
     {
         $query = $this->getEntityManager()
             ->createQuery(
-                'SELECT f FROM PictureArchiveBundle\:File f WHERE f.filepath = :path'
+                'SELECT f FROM PictureArchiveBundle:File f WHERE f.filepath = :path'
             );
         $query->setParameter('path', $filepath);
 
@@ -65,7 +65,7 @@ class FilesRepository extends \Doctrine\ORM\EntityRepository
             ->addGroupBy('f.hash')
             ->andHaving('count(f.hash) > 1')
             ->addOrderBy('f.mediaDate')
-            ->setParameter(':status', File::STATUS_CONFLICT)
+            ->setParameter(':status', MediaFile::STATUS_CONFLICT)
             ->getQuery();
 
         $result = new ArrayCollection();
@@ -86,7 +86,7 @@ class FilesRepository extends \Doctrine\ORM\EntityRepository
      */
     public function countAll()
     {
-        $query = $this->getEntityManager()->createQuery('SELECT COUNT(f.id) FROM PictureArchiveBundle\:File f');
+        $query = $this->getEntityManager()->createQuery('SELECT COUNT(f.id) FROM PictureArchiveBundle:File f');
 
         return (int)$query->getSingleScalarResult();
     }

@@ -1,15 +1,8 @@
 <?php
 
-namespace PictureArchiveBundle\Index;
+namespace PictureArchiveBundle\Service\Index;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
-use PictureArchiveBundle\Entity\File as FileEntity;
-use PictureArchiveBundle\Entity\File;
-use PictureArchiveBundle\Util\FileHashInterface;
-use PictureArchiveBundle\Util\FileScanner;
-use PictureArchiveBundle\Util\ImageExif;
-use Symfony\Bridge\Monolog\Logger;
 
 class Stats
 {

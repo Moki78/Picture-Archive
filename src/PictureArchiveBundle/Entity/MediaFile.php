@@ -5,20 +5,22 @@ namespace PictureArchiveBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Files
+ *
+ * @package PictureArchiveBundle\Entity
+ * @author Moki <picture-archive@mokis-welt.de>
  *
  * @ORM\Table(name="files")
  * @ORM\Entity(repositoryClass="PictureArchiveBundle\Repository\FilesRepository")
  * @ORM\HasLifecycleCallbacks
  */
-class File
+class MediaFile
 {
     const STATUS_NEW = 1;
     const STATUS_IMPORTED = 2;
     const STATUS_CONFLICT = 4;
 
-    const FILE_IMAGE = 'image';
-    const FILE_VIDEO = 'video';
+    const FILE_IMAGE = 1;
+    const FILE_VIDEO = 2;
 
     /**
      * @var int
@@ -28,6 +30,14 @@ class File
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     private $id;
+
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="type", type="integer", nullable=true)
+     */
+    private $type;
 
     /**
      * @var string
@@ -39,16 +49,16 @@ class File
     /**
      * @var string
      *
-     * @ORM\Column(name="filepath", type="string", length=255, unique=true)
+     * @ORM\Column(name="path", type="string", length=255, unique=true)
      */
-    private $filepath;
+    private $path;
 
     /**
      * @var string
      *
      * @ORM\Column(name="filename", type="string", length=255)
      */
-    private $filename;
+    private $name;
 
     /**
      * @var string
@@ -56,7 +66,6 @@ class File
      * @ORM\Column(name="mime_type", type="string", length=255, nullable=true)
      */
     private $mimeType;
-
 
     /**
      * @var int
@@ -92,9 +101,28 @@ class File
      *
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * @param int $type
+     * @return MediaFile
+     */
+    public function setType(int $type): MediaFile
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getType(): int
+    {
+        return $this->type;
     }
 
     /**
@@ -102,9 +130,9 @@ class File
      *
      * @param string $hash
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setHash($hash)
+    public function setHash($hash): MediaFile
     {
         $this->hash = $hash;
 
@@ -116,7 +144,7 @@ class File
      *
      * @return string
      */
-    public function getHash()
+    public function getHash(): string
     {
         return $this->hash;
     }
@@ -124,13 +152,13 @@ class File
     /**
      * Set filepath
      *
-     * @param string $filepath
+     * @param string $path
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setFilepath($filepath)
+    public function setPath($path): MediaFile
     {
-        $this->filepath = $filepath;
+        $this->path = $path;
 
         return $this;
     }
@@ -140,9 +168,9 @@ class File
      *
      * @return string
      */
-    public function getFilepath()
+    public function getPath(): string
     {
-        return $this->filepath;
+        return $this->path;
     }
 
     /**
@@ -150,9 +178,9 @@ class File
      *
      * @param \DateTime $createdAt
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setCreatedAt($createdAt)
+    public function setCreatedAt($createdAt): MediaFile
     {
         $this->createdAt = $createdAt;
 
@@ -164,7 +192,7 @@ class File
      *
      * @return \DateTime
      */
-    public function getCreatedAt()
+    public function getCreatedAt(): ?\DateTime
     {
         return $this->createdAt;
     }
@@ -174,9 +202,9 @@ class File
      *
      * @param \DateTime $date
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setMediaDate($date)
+    public function setMediaDate($date): MediaFile
     {
         $this->mediaDate = $date;
 
@@ -188,7 +216,7 @@ class File
      *
      * @return \DateTime
      */
-    public function getMediaDate()
+    public function getMediaDate(): \DateTime
     {
         return $this->mediaDate;
     }
@@ -198,9 +226,9 @@ class File
      *
      * @param \DateTime $updatedAt
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setUpdatedAt($updatedAt)
+    public function setUpdatedAt($updatedAt): MediaFile
     {
         $this->updatedAt = $updatedAt;
 
@@ -212,7 +240,7 @@ class File
      *
      * @return \DateTime
      */
-    public function getUpdatedAt()
+    public function getUpdatedAt(): \DateTime
     {
         return $this->updatedAt;
     }
@@ -220,13 +248,13 @@ class File
     /**
      * Set filename
      *
-     * @param string $filename
+     * @param string $name
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setFilename($filename)
+    public function setName($name): MediaFile
     {
-        $this->filename = $filename;
+        $this->name = $name;
 
         return $this;
     }
@@ -236,9 +264,9 @@ class File
      *
      * @return string
      */
-    public function getFilename()
+    public function getName(): string
     {
-        return $this->filename;
+        return $this->name;
     }
 
     /**
@@ -246,9 +274,9 @@ class File
      *
      * @param string $mimeType
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setMimeType($mimeType)
+    public function setMimeType($mimeType): MediaFile
     {
         $this->mimeType = $mimeType;
 
@@ -260,7 +288,7 @@ class File
      *
      * @return string
      */
-    public function getMimeType()
+    public function getMimeType(): string
     {
         return $this->mimeType;
     }
@@ -270,9 +298,9 @@ class File
      *
      * @param string $status
      *
-     * @return File
+     * @return MediaFile
      */
-    public function setStatus($status)
+    public function setStatus($status): MediaFile
     {
         $this->status = $status;
 
@@ -284,7 +312,7 @@ class File
      *
      * @return string
      */
-    public function getStatus()
+    public function getStatus(): string
     {
         return $this->status;
     }
@@ -294,9 +322,9 @@ class File
      * @ORM\PrePersist
      * @ORM\PreUpdate
      */
-    public function setTimestamp()
+    public function setTimestamp(): void
     {
-        if ($this->getCreatedAt() == null) {
+        if (null === $this->getCreatedAt()) {
             $this->setCreatedAt(new \DateTime('now'));
         }
         $this->setUpdatedAt(new \DateTime('now'));

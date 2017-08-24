@@ -1,0 +1,15 @@
+picture_archive:
+    archive:
+        base_directory: '%picture_archive.archive.base_directory%'
+        filetype_subdirectory: '%picture_archive.archive.filetype_subdirectory%'
+
+    import:
+        base_directory: '%picture_archive.import.base_directory%'
+        failed_directory: '%picture_archive.import.failed_directory%'
+        supported_types:
+            images: "/image\\//i"
+            videos: "/video\\//i"
+        minimum_fileage: 180
+
+    tools:
+        image_info: '%picture_archive.tool.image.info%'

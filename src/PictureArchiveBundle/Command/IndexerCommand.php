@@ -3,7 +3,7 @@
 namespace PictureArchiveBundle\Command;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use PictureArchiveBundle\Entity\File;
+use PictureArchiveBundle\Entity\MediaFile;
 use PictureArchiveBundle\Index\Processor;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -69,11 +69,11 @@ class IndexerCommand extends ContainerAwareCommand
                     $this->askForDeletion($input, $output, $hash, $items);
                 } else {
                     $items->forAll(
-                        function ($key, File $file) {
+                        function ($key, MediaFile $file) {
                             printf(
                                 "    %s - %s" . PHP_EOL,
                                 $file->getMediaDate()->format('Y-m-d H:i:s'),
-                                $file->getFilepath()
+                                $file->getPath()
                             );
                             return true;
                         }
@@ -148,7 +148,7 @@ class IndexerCommand extends ContainerAwareCommand
             }
         }
         if ($items->count() == 1) {
-            $items->first()->setStatus(File::STATUS_IMPORTED);
+            $items->first()->setStatus(MediaFile::STATUS_IMPORTED);
             $output->writeln("the hash is not conflicted anymore");
         }
 

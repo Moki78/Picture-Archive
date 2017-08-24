@@ -1,8 +1,6 @@
 <?php
 
-namespace PictureArchiveBundle\Index;
-
-use PictureArchiveBundle\Entity\File as FileEntity;
+namespace PictureArchiveBundle\Service\Index;
 
 class FileProcessor
 {

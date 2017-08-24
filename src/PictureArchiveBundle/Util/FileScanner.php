@@ -56,6 +56,8 @@ class FileScanner
         return $this;
     }
 
+
+
     /**
      * @return \ArrayObject|ImportFile[]
      * @throws \InvalidArgumentException
@@ -78,6 +80,8 @@ class FileScanner
 
         return $this->fileList;
     }
+
+
 
     /**
      * @param \Iterator $iterator

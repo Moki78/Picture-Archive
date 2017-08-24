@@ -18,11 +18,11 @@ parameters:
     # A secret key that's used to generate certain security-related tokens
     secret: ThisTokenIsNotSoSecretChangeIt
 
-    picture_archive.base_directory:
-    picture_archive.type_path:
-        image:
-        video:
-    picture_archive.import_directory:
-    picture_archive.import_failed_directory:
-    picture_archive.image.info.exec:
+    picture_archive.archive.base_directory: var/archive
+    picture_archive.archive.filetype_subdirectory:
+        images: images
+        videos: videos
+    picture_archive.import.base_directory: var/import
+    picture_archive.import.failed_directory: var/failed
+    picture_archive.tool.image.info:
 

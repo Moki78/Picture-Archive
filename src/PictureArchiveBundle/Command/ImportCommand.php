@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ImportCommand extends ContainerAwareCommand
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('picturearchive:import')
@@ -26,9 +26,9 @@ class ImportCommand extends ContainerAwareCommand
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|null|void
-     * @throws \Symfony\Component\Console\Exception\LogicException
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
-     * @throws \Symfony\Component\DependencyInjection\Exception\InvalidArgumentException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
      * @throws \LogicException
      */
@@ -37,16 +37,11 @@ class ImportCommand extends ContainerAwareCommand
         $progress = new ProgressBar($output);
         $progress->setFormat('debug');
 
-        $importDirectory = $this->getContainer()->getParameter('picture_archive.import_directory');
-        $directory = new \DirectoryIterator($importDirectory);
-
-        $scanner = $this->getContainer()->get('picture_archive.file.scanner');
-        $scanner->setDirectory($directory);
-        $scanner->addExcludeList($this->getContainer()->getParameter('picture_archive.import_failed_directory'));
-
-        $processor = $this->getContainer()->get('picture_archive.import.processor');
+        $processor = $this->getContainer()->get('picture_archive.import');
         $processor->run($progress);
 
+        $output->writeln('');
+        $output->writeln('');
         $output->writeln('import done');
     }
 }

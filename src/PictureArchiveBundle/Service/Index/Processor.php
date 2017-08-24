@@ -1,11 +1,11 @@
 <?php
 
-namespace PictureArchiveBundle\Index;
+namespace PictureArchiveBundle\Service\Index;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
-use PictureArchiveBundle\Entity\File as FileEntity;
-use PictureArchiveBundle\Entity\File;
+use PictureArchiveBundle\Entity\MediaFile;
+use PictureArchiveBundle\Entity\MediaFile as FileEntity;
 use PictureArchiveBundle\Util\FileHashInterface;
 use PictureArchiveBundle\Util\FileScanner;
 use PictureArchiveBundle\Util\ImageExif;
@@ -48,6 +48,8 @@ class Processor
      * @param Logger $logger
      * @param EntityManager $em
      * @param FileScanner $fileScanner
+     * @param ImageExif $imageDataService
+     * @param FileHashInterface $fileHash
      * @param array $config
      */
     public function __construct(
@@ -58,7 +60,6 @@ class Processor
         FileHashInterface $fileHash,
         array $config
     ) {
-
         $this->logger = $logger;
         $this->scanner = $fileScanner;
         $this->imageDataService = $imageDataService;
@@ -71,11 +72,14 @@ class Processor
     /**
      *
      */
-    public function run()
+    public function run(): void
     {
         $this->logger->info('read directory ...');
 
         $files = $this->scanner->getFiles();
+
+
+
         $this->logger->info('process ' . $files->count() . ' files ...');
 
         $entityCollection = new ArrayCollection();
@@ -87,8 +91,8 @@ class Processor
 
             $entity = new FileEntity();
             $entity
-                ->setFilepath($filepath)
-                ->setFilename($file->getFilename())
+                ->setPath($filepath)
+                ->setName($file->getFilename())
                 ->setStatus(FileEntity::STATUS_IMPORTED);
 
             $entity->setMimeType($file->getMimeType());
@@ -134,12 +138,12 @@ class Processor
     }
 
     /**
-     * @param File $file
+     * @param MediaFile $file
      * @return bool
      */
-    public function deleteConflictedFile(File $file)
+    public function deleteConflictedFile(MediaFile $file)
     {
-        $filepath = rtrim($this->config['base_directory']) . '/' . $file->getFilepath();
+        $filepath = rtrim($this->config['base_directory']) . '/' . $file->getPath();
         if (!file_exists($filepath) || unlink($filepath)) {
             $this->em->remove($file);
             return true;
