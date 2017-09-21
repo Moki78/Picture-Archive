@@ -3,8 +3,8 @@
 namespace PictureArchiveBundle\Service\Import\Analyser;
 
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Entity\ImportFile;
-use PictureArchiveBundle\Repository\FilesRepository;
+use PictureArchiveBundle\Component\FileInfo;
+use PictureArchiveBundle\Repository\MediaFileRepository;
 use PictureArchiveBundle\Service\Import\AnalyserInterface;
 use PictureArchiveBundle\Util\FileHashInterface;
 
@@ -20,7 +20,7 @@ class FileExists implements AnalyserInterface
      */
     private $configuration;
     /**
-     * @var FilesRepository
+     * @var MediaFileRepository
      */
     private $repository;
     /**
@@ -33,9 +33,9 @@ class FileExists implements AnalyserInterface
      *
      * @param Configuration $configuration
      * @param FileHashInterface $hash
-     * @param FilesRepository $repository
+     * @param MediaFileRepository $repository
      */
-    public function __construct(Configuration $configuration, FileHashInterface $hash, FilesRepository $repository)
+    public function __construct(Configuration $configuration, FileHashInterface $hash, MediaFileRepository $repository)
     {
         $this->configuration = $configuration;
         $this->repository = $repository;
@@ -43,12 +43,13 @@ class FileExists implements AnalyserInterface
     }
 
     /**
-     * @param ImportFile $fileimportFile
+     * @param FileInfo $fileInfo
      * @return bool
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function analyse(ImportFile $fileimportFile)
+    public function analyse(FileInfo $fileInfo): bool
     {
-        $filepath = $fileimportFile->getFile()->getPathname();
+        $filepath = $fileInfo->getPathname();
         $hash = $this->hash->hash($filepath);
 
         $result = $this->repository->findByHash($hash);
@@ -62,18 +63,18 @@ class FileExists implements AnalyserInterface
 
 
             if (!$this->repository->findByFilepath($filepath)) {
-                $fileimportFile->setStatus(ImportFile::STATUS_VALID);
+                $fileInfo->setStatus(FileInfo::STATUS_VALID);
                 return true;
             }
 
-            $fileimportFile->setStatus(ImportFile::STATUS_INVALID);
-            $fileimportFile->setStatusMessage("Filepath '{$filepath}' already exists");
+            $fileInfo->setStatus(FileInfo::STATUS_INVALID);
+            $fileInfo->setStatusMessage("Filepath '{$filepath}' already exists");
 
             return false;
         }
 
-        $fileimportFile->setStatus(ImportFile::STATUS_INVALID);
-        $fileimportFile->setStatusMessage("File hash '{$hash}' already exists");
+        $fileInfo->setStatus(FileInfo::STATUS_INVALID);
+        $fileInfo->setStatusMessage("File hash '{$hash}' already exists");
 
         return false;
     }

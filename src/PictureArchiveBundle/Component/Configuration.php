@@ -2,6 +2,8 @@
 
 namespace PictureArchiveBundle\Component;
 
+use PictureArchiveBundle\Component\Report\ReportInterface;
+
 /**
  *
  * @package PictureArchiveBundle\Component
@@ -44,6 +46,9 @@ class Configuration
      * @var array
      */
     private $tools = [];
+
+
+    private $reporter = [];
 
     /**
      * @return string
@@ -154,6 +159,34 @@ class Configuration
     }
 
     /**
+     * @return ReportInterface[]
+     */
+    public function getReporter(): array
+    {
+        return $this->reporter;
+    }
+
+    /**
+     * @param ReportInterface[] $reporter
+     * @return Configuration
+     */
+    public function setReporter(array $reporter): Configuration
+    {
+        $this->reporter = $reporter;
+        return $this;
+    }
+
+    /**
+     * @param ReportInterface $reporter
+     * @return Configuration
+     */
+    public function addReporter(ReportInterface $reporter): Configuration
+    {
+        $this->reporter[] = $reporter;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getTools(): array
@@ -170,4 +203,6 @@ class Configuration
         $this->tools = $tools;
         return $this;
     }
+
+
 }

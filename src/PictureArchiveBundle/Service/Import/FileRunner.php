@@ -2,17 +2,17 @@
 
 namespace PictureArchiveBundle\Service\Import;
 
-use ArrayIterator;
-use finfo;
+use Doctrine\Common\Collections\ArrayCollection;
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Entity\ImportFile;
+use PictureArchiveBundle\Component\FileInfo;
+use PictureArchiveBundle\Component\FileSystem\LoaderAbstract;
 
 /**
  *
  * @package PictureArchiveBundle\Import
  * @author Moki <picture-archive@mokis-welt.de>
  */
-class FileRunner implements \Iterator, \Countable
+class FileRunner implements \Countable
 {
     /**
      * @var array
@@ -20,28 +20,30 @@ class FileRunner implements \Iterator, \Countable
     private $excludeList = array();
 
     /**
-     * @var finfo
-     */
-    private $finfo;
-
-    /**
      * @var Configuration
      */
     private $configuration;
 
     /**
-     * @var ArrayIterator
+     * @var ArrayCollection
      */
-    private $fileIterator;
+    private $fileCollection;
+
+    /**
+     * @var LoaderAbstract
+     */
+    private $fileLoader;
 
     /**
      * FileRunner constructor.
+     *
      * @param Configuration $configuration
+     * @param LoaderAbstract $fileLoader
      */
-    public function __construct(Configuration $configuration)
+    public function __construct(Configuration $configuration, LoaderAbstract $fileLoader)
     {
-        $this->finfo = new finfo(FILEINFO_MIME); // return mime type ala mimetype extension
         $this->configuration = $configuration;
+        $this->fileLoader = $fileLoader;
     }
 
     /**
@@ -66,77 +68,33 @@ class FileRunner implements \Iterator, \Countable
         return $this;
     }
 
-    /**
-     * @return ImportFile
-     * @throws \RuntimeException
-     */
-    public function current(): ImportFile
+    public function count()
     {
-        return $this->getCurrentImportFile();
-    }
-
-    public function next(): void
-    {
-        $this->fileIterator->next();
+        return $this->fileCollection->count();
     }
 
     /**
-     * @return int
+     * @return ArrayCollection
      */
-    public function key(): int
+    public function getFileCollection(): ArrayCollection
     {
-        return $this->fileIterator->key();
-    }
-
-    /**
-     * @return bool
-     */
-    public function valid(): bool
-    {
-        return $this->fileIterator->valid();
-    }
-
-    public function rewind()
-    {
-        $this->fileIterator->rewind();
-    }
-
-    /**
-     * @return ArrayIterator
-     */
-    public function getFileIterator(): \ArrayIterator
-    {
-        return $this->fileIterator;
-    }
-
-    /**
-     * @return int
-     */
-    public function count(): int
-    {
-        return $this->fileIterator->count();
+        return $this->fileCollection;
     }
 
     /**
      *
-     * @throws \InvalidArgumentException
      */
     public function loadFiles()
     {
-        $fileList = [];
+        $that = $this;
 
-        $directory = new \RecursiveDirectoryIterator(
-            $this->configuration->getImportBaseDirectory(),
-            \RecursiveDirectoryIterator::SKIP_DOTS
+        $fileCollection = $this->fileLoader->getIterator(
+            $this->configuration->getImportBaseDirectory()
         );
 
-        foreach (new \RecursiveIteratorIterator($directory) as $file) {
-            if ($this->isValidFile($file)) {
-                $fileList[] = $file;
-            }
-        }
-
-        $this->fileIterator = new ArrayIterator($fileList);
+        $this->fileCollection = $fileCollection->filter(function (FileInfo $fileInfo) use ($that) {
+            return $that->isValidFile($fileInfo);
+        });
     }
 
     /**
@@ -145,10 +103,6 @@ class FileRunner implements \Iterator, \Countable
      */
     private function isValidFile(\SplFileInfo $file): bool
     {
-        if ($file->isDir() || $file->isLink()) {
-            return false;
-        }
-
         foreach ($this->excludeList as $excludeItem) {
             if (false !== strpos($file->getPathname(), $excludeItem)) {
                 return false;
@@ -156,36 +110,5 @@ class FileRunner implements \Iterator, \Countable
         }
 
         return true;
-    }
-
-    /**
-     * @return ImportFile
-     * @throws \RuntimeException
-     */
-    private function getCurrentImportFile(): ImportFile
-    {
-        $file = $this->fileIterator->current();
-
-        $fileDate = new \DateTime();
-        $fileDate->setTimestamp($file->getMTime());
-
-        $mimeType = $this->getMime($file->getPathname());
-
-        $importFile = new ImportFile();
-        $importFile
-            ->setFile($file)
-            ->setFileDate($fileDate)
-            ->setMimeType($mimeType);
-
-        return $importFile;
-    }
-
-    /**
-     * @param string $filepath
-     * @return string
-     */
-    private function getMime($filepath): string
-    {
-        return $this->finfo->file($filepath);
     }
 }

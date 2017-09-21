@@ -3,7 +3,7 @@
 namespace PictureArchiveBundle\Service\Import\Analyser;
 
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Entity\ImportFile;
+use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Service\Import\AnalyserInterface;
 
 /**
@@ -28,17 +28,18 @@ class FileMinAge implements AnalyserInterface
     }
 
     /**
-     * @param ImportFile $fileimportFile
+     * @param FileInfo $fileInfo
      * @return bool
      */
-    public function analyse(ImportFile $fileimportFile)
+    public function analyse(FileInfo $fileInfo): bool
     {
-        if ($fileimportFile->getFileDate()->getTimestamp() + $this->configuration->getImportMinimumFileAge() < time()) {
-            $fileimportFile->setStatus(ImportFile::STATUS_VALID);
+        if ($fileInfo->getFileDate()->getTimestamp() + $this->configuration->getImportMinimumFileAge() < time()) {
+            $fileInfo->setStatus(FileInfo::STATUS_VALID);
+            return true;
         }
 
-        $fileimportFile->setStatus(ImportFile::STATUS_INVALID);
-        $fileimportFile->setStatusMessage('low fileage, ignore on import');
+        $fileInfo->setStatus(FileInfo::STATUS_WAIT);
+        $fileInfo->setStatusMessage('low fileage, ignore on import');
 
         return false;
     }

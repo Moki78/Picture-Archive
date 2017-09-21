@@ -2,7 +2,7 @@
 
 namespace PictureArchiveBundle\Service\Import;
 
-use PictureArchiveBundle\Entity\ImportFile;
+use PictureArchiveBundle\Component\FileInfo;
 
 /**
  * @package PictureArchiveBundle\Service\Import\Analyser
@@ -11,8 +11,8 @@ use PictureArchiveBundle\Entity\ImportFile;
 interface AnalyserInterface
 {
     /**
-     * @param ImportFile $fileimportFile
+     * @param FileInfo $importFile
      * @return bool
      */
-    public function analyse(ImportFile $fileimportFile);
+    public function analyse(FileInfo $importFile): bool;
 }

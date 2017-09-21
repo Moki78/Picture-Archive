@@ -3,7 +3,7 @@
 namespace PictureArchiveBundle\Service\Import\Analyser;
 
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Entity\ImportFile;
+use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Service\Import\AnalyserInterface;
 
 /**
@@ -28,20 +28,20 @@ class MimeType implements AnalyserInterface
     }
 
     /**
-     * @param ImportFile $fileimportFile
+     * @param FileInfo $fileInfo
      * @return bool
      */
-    public function analyse(ImportFile $fileimportFile)
+    public function analyse(FileInfo $fileInfo): bool
     {
         foreach ($this->configuration->getImportSupportedTypes() as $type => $check) {
-            if (preg_match($check, $fileimportFile->getMimeType())) {
-                $fileimportFile->setStatus(ImportFile::STATUS_VALID);
+            if (preg_match($check, $fileInfo->getMimeType())) {
+                $fileInfo->setStatus(FileInfo::STATUS_VALID);
                 return true;
             }
         }
 
-        $fileimportFile->setStatus(ImportFile::STATUS_INVALID);
-        $fileimportFile->setStatusMessage("file type {$fileimportFile->getMimeType()} is not supported");
+        $fileInfo->setStatus(FileInfo::STATUS_INVALID);
+        $fileInfo->setStatusMessage("file type {$fileInfo->getMimeType()} is not supported");
 
         return false;
     }

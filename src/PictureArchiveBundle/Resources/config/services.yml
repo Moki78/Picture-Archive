@@ -10,21 +10,32 @@ services:
       - [ setImportSupportedTypes, ["%picture_archive.import.supported_types%"]]
       - [ setTools, ["%picture_archive.tools%"]]
 
+  picture_archive.component.file_system.flat_loader:
+    class: PictureArchiveBundle\Component\FileSystem\FlatLoader
+    arguments:
+      - "@picture_archive.file.hash"
+
+  picture_archive.component.file_system.recursive_loader:
+    class: PictureArchiveBundle\Component\FileSystem\RecursiveLoader
+    arguments:
+      - "@picture_archive.file.hash"
+
   picture_archive.import:
     class: PictureArchiveBundle\Service\Import
     arguments:
       - "@doctrine.orm.entity_manager"
+      - "@event_dispatcher"
       - "@picture_archive.import.file_runner"
       - "@picture_archive.index.file_processor"
       - "@picture_archive.import.analyser"
-      - "@picture_archive.file.hash"
       - "@picture_archive.component.configuration"
-      - "@logger"
+      - "@picture_archive.image.info"
 
   picture_archive.import.file_runner:
     class: PictureArchiveBundle\Service\Import\FileRunner
     arguments:
       - "@picture_archive.component.configuration"
+      - "@picture_archive.component.file_system.flat_loader"
 
   picture_archive.import.analyser:
     class: PictureArchiveBundle\Service\Import\Analyser
@@ -32,6 +43,7 @@ services:
       - [ addAnalyser, ["@picture_archive.import.analyser.file_min_age"]]
       - [ addAnalyser, ["@picture_archive.import.analyser.file_min_age"]]
       - [ addAnalyser, ["@picture_archive.import.analyser.file_exixts"]]
+      - [ addAnalyser, ["@picture_archive.import.analyser.media_date_isset"]]
 
   picture_archive.import.analyser.file_min_age:
     class: PictureArchiveBundle\Service\Import\Analyser\FileMinAge
@@ -48,7 +60,32 @@ services:
     arguments:
       - "@picture_archive.component.configuration"
       - "@picture_archive.file.hash"
-      - "@=service('doctrine.orm.default_entity_manager').getRepository('PictureArchiveBundle:File')"
+      - "@=service('doctrine.orm.default_entity_manager').getRepository('PictureArchiveBundle:MediaFile')"
+
+  picture_archive.import.analyser.media_date_isset:
+    class: PictureArchiveBundle\Service\Import\Analyser\MediaDateIsset
+
+  picture_archive.import.report:
+      class: PictureArchiveBundle\Service\Import\Report
+      arguments:
+            - "@picture_archive.component.configuration"
+      tags:
+        - { name: kernel.event_listener, event: picture-archive.import.start, method: startImport }
+        - { name: kernel.event_listener, event: picture-archive.import.analyse.failed, method: importFile }
+        - { name: kernel.event_listener, event: picture-archive.import.save.failed, method: importFile }
+        - { name: kernel.event_listener, event: picture-archive.import.success, method: importFile }
+        - { name: kernel.event_listener, event: picture-archive.import.error, method: importFile }
+        - { name: kernel.event_listener, event: picture-archive.import.finish, method: finishImport }
+
+  picture_archive.import.failed_handler:
+    class: PictureArchiveBundle\Service\Import\FailedHandler
+    arguments:
+          - "@picture_archive.component.configuration"
+    tags:
+      - { name: kernel.event_listener, event: picture-archive.import.analyse.failed, method: moveFile }
+      - { name: kernel.event_listener, event: picture-archive.import.save.failed, method: moveFile }
+      - { name: kernel.event_listener, event: picture-archive.import.error, method: moveFile }
+
 
   picture_archive.file.scanner:
     class: PictureArchiveBundle\Util\FileScanner
@@ -64,20 +101,19 @@ services:
 
   picture_archive.index.file_processor:
     class: PictureArchiveBundle\Service\Index\FileProcessor
+    arguments:
+      - "@picture_archive.component.configuration"
 
   picture_archive.index.statistics:
     class: PictureArchiveBundle\Service\Index\Stats
     arguments:
       - "@doctrine.orm.entity_manager"
 
-#  picture_archive.index.processor:
-#    class: PictureArchiveBundle\Service\Index\Processor
-#    arguments:
-#      - "@logger"
-#      - "@doctrine.orm.entity_manager"
-#      - "@picture_archive.file.scanner"
-#      - "@picture_archive.image.info"
-#      - "@picture_archive.file.hash"
-#      -
-#        base_directory: "%picture_archive.archive.base_directory%"
-#        type_path: ["%picture_archive.archive.path.videos%", "%picture_archive.archive.path.images%"]
+  picture_archive.index:
+    class: PictureArchiveBundle\Service\Index
+    arguments:
+      - "@doctrine.orm.entity_manager"
+      - "@event_dispatcher"
+      - "@picture_archive.import.file_runner"
+      - "@picture_archive.component.configuration"
+      - "@picture_archive.image.info"

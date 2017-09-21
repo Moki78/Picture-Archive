@@ -1,13 +1,13 @@
 <?php
 
-namespace PictureArchiveBundle\Entity;
+namespace PictureArchiveBundle\Component;
 
 /**
  *
  * @package PictureArchiveBundle\Entity
  * @author Moki <picture-archive@mokis-welt.de>
  */
-class ImportFile
+class FileInfo extends \SplFileInfo
 {
     const TYPE_UNKNOWN = 0;
     const TYPE_IMAGE = 1;
@@ -15,11 +15,7 @@ class ImportFile
 
     const STATUS_VALID = 1;
     const STATUS_INVALID = 2;
-
-    /**
-     * @var \SplFileInfo
-     */
-    private $file;
+    const STATUS_WAIT = 3;
 
     /**
      * @var \DateTime
@@ -42,6 +38,11 @@ class ImportFile
     private $mimeType;
 
     /**
+     * @var string
+     */
+    private $fileHash;
+
+    /**
      * @var int
      */
     private $status;
@@ -52,36 +53,18 @@ class ImportFile
     private $statusMessage = '';
 
     /**
-     * @return \SplFileInfo
-     */
-    public function getFile(): \SplFileInfo
-    {
-        return $this->file;
-    }
-
-    /**
-     * @param \SplFileInfo $file
-     * @return ImportFile
-     */
-    public function setFile(\SplFileInfo $file): ImportFile
-    {
-        $this->file = $file;
-        return $this;
-    }
-
-    /**
      * @return string
      */
-    public function getFileType(): string
+    public function getFileType(): ?string
     {
         return $this->fileType;
     }
 
     /**
      * @param string $fileType
-     * @return ImportFile
+     * @return FileInfo
      */
-    public function setFileType(string $fileType): ImportFile
+    public function setFileType(string $fileType): FileInfo
     {
         $this->fileType = $fileType;
         return $this;
@@ -90,16 +73,16 @@ class ImportFile
     /**
      * @return \DateTime
      */
-    public function getFileDate(): \DateTime
+    public function getFileDate(): ?\DateTime
     {
         return $this->fileDate;
     }
 
     /**
      * @param \DateTime $fileDate
-     * @return ImportFile
+     * @return FileInfo
      */
-    public function setFileDate(\DateTime $fileDate): ImportFile
+    public function setFileDate(\DateTime $fileDate): FileInfo
     {
         $this->fileDate = $fileDate;
 
@@ -107,18 +90,36 @@ class ImportFile
     }
 
     /**
+     * @return string
+     */
+    public function getFileHash(): ?string
+    {
+        return $this->fileHash;
+    }
+
+    /**
+     * @param string $fileHash
+     * @return FileInfo
+     */
+    public function setFileHash(string $fileHash): FileInfo
+    {
+        $this->fileHash = $fileHash;
+        return $this;
+    }
+
+    /**
      * @return \DateTime
      */
-    public function getMediaDate(): \DateTime
+    public function getMediaDate(): ?\DateTime
     {
         return $this->mediaDate;
     }
 
     /**
      * @param \DateTime $mediaDate
-     * @return ImportFile
+     * @return FileInfo
      */
-    public function setMediaDate(\DateTime $mediaDate): ImportFile
+    public function setMediaDate(\DateTime $mediaDate): FileInfo
     {
         $this->mediaDate = $mediaDate;
         return $this;
@@ -127,16 +128,16 @@ class ImportFile
     /**
      * @return string
      */
-    public function getMimeType(): string
+    public function getMimeType(): ?string
     {
         return $this->mimeType;
     }
 
     /**
      * @param string $mimeType
-     * @return ImportFile
+     * @return FileInfo
      */
-    public function setMimeType(string $mimeType): ImportFile
+    public function setMimeType(string $mimeType): FileInfo
     {
         $this->mimeType = $mimeType;
 
@@ -146,16 +147,16 @@ class ImportFile
     /**
      * @return int
      */
-    public function getStatus(): int
+    public function getStatus(): ?int
     {
         return $this->status;
     }
 
     /**
      * @param int $status
-     * @return ImportFile
+     * @return FileInfo
      */
-    public function setStatus(int $status): ImportFile
+    public function setStatus(int $status): FileInfo
     {
         $this->status = $status;
 
@@ -165,16 +166,16 @@ class ImportFile
     /**
      * @return string
      */
-    public function getStatusMessage(): string
+    public function getStatusMessage(): ?string
     {
         return $this->statusMessage;
     }
 
     /**
      * @param string $statusMessage
-     * @return ImportFile
+     * @return FileInfo
      */
-    public function setStatusMessage(string $statusMessage): ImportFile
+    public function setStatusMessage(string $statusMessage): FileInfo
     {
         $this->statusMessage = $statusMessage;
         return $this;

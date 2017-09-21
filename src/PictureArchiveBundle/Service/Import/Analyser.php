@@ -2,7 +2,7 @@
 
 namespace PictureArchiveBundle\Service\Import;
 
-use PictureArchiveBundle\Entity\ImportFile;
+use PictureArchiveBundle\Component\FileInfo;
 
 /**
  *
@@ -28,19 +28,19 @@ class Analyser
     }
 
     /**
-     * @param ImportFile $file
-     * @return ImportFile
+     * @param FileInfo $file
+     * @return FileInfo
      */
-    public function analyse(ImportFile $file)
+    public function analyse(FileInfo $file)
     {
         foreach ($this->analyserCollection as $analyser) {
             if (!$analyser->analyse($file)) {
-                $file->setStatus(ImportFile::STATUS_INVALID);
+                $file->setStatus(FileInfo::STATUS_INVALID);
                 return $file;
             }
         }
 
-        $file->setStatus(ImportFile::STATUS_VALID);
+        $file->setStatus(FileInfo::STATUS_VALID);
         return $file;
     }
 }

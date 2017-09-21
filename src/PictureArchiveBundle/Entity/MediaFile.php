@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @author Moki <picture-archive@mokis-welt.de>
  *
  * @ORM\Table(name="files")
- * @ORM\Entity(repositoryClass="PictureArchiveBundle\Repository\FilesRepository")
+ * @ORM\Entity(repositoryClass="PictureArchiveBundle\Repository\MediaFileRepository")
  * @ORM\HasLifecycleCallbacks
  */
 class MediaFile
@@ -19,8 +19,9 @@ class MediaFile
     const STATUS_IMPORTED = 2;
     const STATUS_CONFLICT = 4;
 
-    const FILE_IMAGE = 1;
-    const FILE_VIDEO = 2;
+    const TYPE_UNKNOWN = 0;
+    const TYPE_IMAGE = 1;
+    const TYPE_VIDEO = 2;
 
     /**
      * @var int
@@ -107,17 +108,6 @@ class MediaFile
     }
 
     /**
-     * @param int $type
-     * @return MediaFile
-     */
-    public function setType(int $type): MediaFile
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getType(): int
@@ -126,15 +116,12 @@ class MediaFile
     }
 
     /**
-     * Set hash
-     *
-     * @param string $hash
-     *
+     * @param int $type
      * @return MediaFile
      */
-    public function setHash($hash): MediaFile
+    public function setType(int $type): MediaFile
     {
-        $this->hash = $hash;
+        $this->type = $type;
 
         return $this;
     }
@@ -150,15 +137,15 @@ class MediaFile
     }
 
     /**
-     * Set filepath
+     * Set hash
      *
-     * @param string $path
+     * @param string $hash
      *
      * @return MediaFile
      */
-    public function setPath($path): MediaFile
+    public function setHash(string $hash): MediaFile
     {
-        $this->path = $path;
+        $this->hash = $hash;
 
         return $this;
     }
@@ -174,39 +161,15 @@ class MediaFile
     }
 
     /**
-     * Set createdAt
+     * Set filepath
      *
-     * @param \DateTime $createdAt
-     *
-     * @return MediaFile
-     */
-    public function setCreatedAt($createdAt): MediaFile
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    /**
-     * Get createdAt
-     *
-     * @return \DateTime
-     */
-    public function getCreatedAt(): ?\DateTime
-    {
-        return $this->createdAt;
-    }
-
-    /**
-     * Set mediaDate
-     *
-     * @param \DateTime $date
+     * @param string $path
      *
      * @return MediaFile
      */
-    public function setMediaDate($date): MediaFile
+    public function setPath(string $path): MediaFile
     {
-        $this->mediaDate = $date;
+        $this->path = $path;
 
         return $this;
     }
@@ -222,15 +185,15 @@ class MediaFile
     }
 
     /**
-     * Set updatedAt
+     * Set mediaDate
      *
-     * @param \DateTime $updatedAt
+     * @param \DateTime $date
      *
      * @return MediaFile
      */
-    public function setUpdatedAt($updatedAt): MediaFile
+    public function setMediaDate(\DateTime $date): MediaFile
     {
-        $this->updatedAt = $updatedAt;
+        $this->mediaDate = $date;
 
         return $this;
     }
@@ -246,15 +209,15 @@ class MediaFile
     }
 
     /**
-     * Set filename
+     * Set updatedAt
      *
-     * @param string $name
+     * @param \DateTime $updatedAt
      *
      * @return MediaFile
      */
-    public function setName($name): MediaFile
+    public function setUpdatedAt(\DateTime $updatedAt): MediaFile
     {
-        $this->name = $name;
+        $this->updatedAt = $updatedAt;
 
         return $this;
     }
@@ -270,15 +233,15 @@ class MediaFile
     }
 
     /**
-     * Set mimeType
+     * Set filename
      *
-     * @param string $mimeType
+     * @param string $name
      *
      * @return MediaFile
      */
-    public function setMimeType($mimeType): MediaFile
+    public function setName(string $name): MediaFile
     {
-        $this->mimeType = $mimeType;
+        $this->name = $name;
 
         return $this;
     }
@@ -296,25 +259,39 @@ class MediaFile
     /**
      * Set mimeType
      *
-     * @param string $status
+     * @param string $mimeType
      *
      * @return MediaFile
      */
-    public function setStatus($status): MediaFile
+    public function setMimeType(string $mimeType): MediaFile
     {
-        $this->status = $status;
+        $this->mimeType = $mimeType;
 
         return $this;
     }
 
     /**
-     * Get mimeType
+     * Get status
      *
-     * @return string
+     * @return int
      */
-    public function getStatus(): string
+    public function getStatus(): int
     {
         return $this->status;
+    }
+
+    /**
+     * Set status
+     *
+     * @param int $status
+     *
+     * @return MediaFile
+     */
+    public function setStatus(int $status): MediaFile
+    {
+        $this->status = $status;
+
+        return $this;
     }
 
     /**
@@ -328,5 +305,29 @@ class MediaFile
             $this->setCreatedAt(new \DateTime('now'));
         }
         $this->setUpdatedAt(new \DateTime('now'));
+    }
+
+    /**
+     * Get createdAt
+     *
+     * @return \DateTime
+     */
+    public function getCreatedAt(): ?\DateTime
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * Set createdAt
+     *
+     * @param \DateTime $createdAt
+     *
+     * @return MediaFile
+     */
+    public function setCreatedAt(\DateTime $createdAt): MediaFile
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
     }
 }

@@ -4,17 +4,16 @@ namespace PictureArchiveBundle\Service;
 
 use Doctrine\ORM\EntityManager;
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Entity\MediaFile as MediaFileEntity;
-use PictureArchiveBundle\Entity\ImportFile;
-use PictureArchiveBundle\Service\Import\AnalyseEvent;
+use PictureArchiveBundle\Component\FileInfo;
+use PictureArchiveBundle\Entity\MediaFile;
+use PictureArchiveBundle\Event\ImportEvent;
 use PictureArchiveBundle\Service\Import\Analyser;
-use PictureArchiveBundle\Service\Import\Exception;
 use PictureArchiveBundle\Service\Import\FileRunner;
 use PictureArchiveBundle\Service\Index\FileProcessor;
-use PictureArchiveBundle\Util\FileHashInterface;
-use Symfony\Bridge\Monolog\Logger;
+use PictureArchiveBundle\Util\ImageExif;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  *
@@ -24,19 +23,9 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 class Import
 {
     /**
-     * @var Logger
-     */
-    private $logger;
-
-    /**
      * @var FileRunner
      */
     private $fileRunner;
-
-    /**
-     * @var FileHashInterface
-     */
-    private $fileHash;
 
     /**
      * @var EntityManager
@@ -52,42 +41,50 @@ class Import
      * @var Configuration
      */
     private $configuration;
-    /**
-     * @var EventDispatcher
-     */
-    private $eventDispatcher;
+
     /**
      * @var Analyser
      */
     private $analyser;
 
     /**
+     * @var ImageExif
+     */
+    private $imageExifService;
+
+    /**
+     * @var EventDispatcher
+     */
+    private $eventDispatcher;
+
+    /**
      * Processor constructor.
      * @param EntityManager $em
+     * @param EventDispatcherInterface $eventDispatcher
      * @param FileRunner $fileRunner
      * @param FileProcessor $fileProcessor
      * @param Analyser $analyser
-     * @param FileHashInterface $fileHash
      * @param Configuration $configuration
-     * @param Logger $logger
+     * @param ImageExif $imageExif
+     * @internal param Logger $logger
      */
     public function __construct(
         EntityManager $em,
+        EventDispatcherInterface $eventDispatcher,
         FileRunner $fileRunner,
         FileProcessor $fileProcessor,
         Analyser $analyser,
-        FileHashInterface $fileHash,
         Configuration $configuration,
-        Logger $logger
+        ImageExif $imageExif
     )
     {
         $this->em = $em;
-        $this->logger = $logger;
         $this->fileRunner = $fileRunner;
         $this->fileProcessor = $fileProcessor;
-        $this->fileHash = $fileHash;
         $this->configuration = $configuration;
         $this->analyser = $analyser;
+        $this->imageExifService = $imageExif;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -98,84 +95,123 @@ class Import
      */
     public function run(ProgressBar $progressBar): bool
     {
-        $this->logger->info('run import processor');
+        $importEvent = new ImportEvent();
+
+        $this->eventDispatcher->dispatch(
+            'picture-archive.import.start',
+            $importEvent->setStatus(ImportEvent::STATUS_START)
+        );
+
+        $this->fileProcessor->initialize();
 
         $this->fileRunner->loadFiles();
 
         $progressBar->start($this->fileRunner->count());
 
-        $stats = array('imported' => 0, 'failed' => 0);
-
-        foreach ($this->fileRunner as $importFile) {
+        foreach ($this->fileRunner->getFileCollection() as $importFile) {
             $progressBar->advance();
 
+            $importEvent = new ImportEvent();
+            $importEvent->setFileInfo($importFile);
+
             try {
-                $this->logger->info("process '{$importFile->getFile()->getPathname()}'");
+                $this->setMediaDate($importFile);
 
                 $importFile = $this->analyser->analyse($importFile);
-                if (ImportFile::STATUS_INVALID === $importFile->getStatus()) {
+                if (FileInfo::STATUS_INVALID === $importFile->getStatus()) {
+                    $importEvent->setStatus(ImportEvent::STATUS_ANALYSE_FAILED);
+                    $importEvent->setMessage($importFile->getStatusMessage());
+
+                    $this->eventDispatcher->dispatch('picture-archive.import.analyse.failed', $importEvent);
                     continue;
                 }
 
-                $mediaFileEntity = $this->createEntity($importFile);
+                $mediaFile = $this->createEntity($importFile);
 
+                $status = $this->fileProcessor->saveFile($mediaFile, $importFile->getPathname());
 
-//                $this->fileProcessor->saveFile($importFile->getFile()->getPathname(), $fullFilepath);
+                if (!$status) {
+                    // could not rename file
+                    $importEvent->setStatus(ImportEvent::STATUS_SAVE_FAILED);
+                    $importEvent->setMessage('rename failed');
 
-                $mediaFileEntity->setStatus(MediaFileEntity::STATUS_IMPORTED);
+                    $this->eventDispatcher->dispatch('picture-archive.import.save.failed', $importEvent);
+
+                    continue;
+                }
+
+                $mediaFile->setStatus(MediaFile::STATUS_IMPORTED);
 
                 // save file
-                $this->em->persist($mediaFileEntity);
+                $this->em->persist($mediaFile);
                 $this->em->flush();
 
-                $stats['imported']++;
+                $importEvent->setStatus(ImportEvent::STATUS_SUCCESS);
+
+                $this->eventDispatcher->dispatch(
+                    'picture-archive.import.success',
+                    $importEvent->setStatus(ImportEvent::STATUS_SUCCESS)
+                );
 
             } catch (\Exception $e) {
                 // log Exception
-                $this->logger->error("failed to proceed file: '{$importFile->getFile()->getPathname()}'");
-                $this->logger->error($e->getMessage());
+                $importEvent->setStatus(ImportEvent::STATUS_ERROR);
+                $importEvent->setMessage($e->getMessage());
 
-//                $this->fileProcessor->saveFailedFile(
-//                    $importFile->getFilepath(),
-//                    $this->config['failed_directory']
-//                );
+                $this->eventDispatcher->dispatch('picture-archive.import.error', new ImportEvent(1, ''));
 
-                $stats['failed']++;
+
                 continue;
             }
         }
         $progressBar->finish();
 
-
-        $this->logger->info($stats['imported'] . ' files imported');
-        $this->logger->info($stats['failed'] . ' files failed');
+        $this->eventDispatcher->dispatch(
+            'picture-archive.import.finish',
+            $importEvent->setStatus(ImportEvent::STATUS_FINISH)
+        );
 
         return true;
     }
 
     /**
-     * @param ImportFile $importFile
-     * @return MediaFileEntity
+     * @param FileInfo $importFile
+     * @return FileInfo
      */
-    private function createEntity(ImportFile $importFile): MediaFileEntity
+    public function setMediaDate(FileInfo $importFile): FileInfo
     {
-        $entity = new MediaFileEntity();
+        $createDate = $this->imageExifService->getCreationDate($importFile->getPathname());
+        if ($createDate) {
+            $importFile->setMediaDate($createDate);
+        }
+
+        return $importFile;
+    }
+
+    /**
+     * @param FileInfo $importFile
+     * @return MediaFile
+     */
+    private function createEntity(FileInfo $importFile): MediaFile
+    {
+        $entity = new MediaFile();
         $entity
-            ->setStatus(MediaFileEntity::STATUS_NEW)
+            ->setType(MediaFile::TYPE_UNKNOWN)
+            ->setStatus(MediaFile::STATUS_NEW)
             ->setMimeType($importFile->getMimeType())
-            ->setHash($this->fileHash->hash($importFile->getFile()->getPathname()))
+            ->setHash($importFile->getFileHash())
             ->setMediaDate($importFile->getMediaDate())
             ->setPath($this->generateFilename($importFile))
-            ->setName(end($filepath));
+            ->setName($importFile->getFilename());
 
         return $entity;
     }
 
     /**
-     * @param ImportFile $importFile
+     * @param FileInfo $importFile
      * @return string
      */
-    private function generateFilename(ImportFile $importFile): string
+    private function generateFilename(FileInfo $importFile): string
     {
         $subDirectories = $this->configuration->getArchiveFiletypeSubdirectory();
 
@@ -184,32 +220,16 @@ class Import
                 '%s/%s/%s',
                 $subDirectories[$importFile->getFileType()],
                 $importFile->getFileDate()->format('Y/m'),
-                $importFile->getFile()->getFilename()
+                $importFile->getFilename()
             );
         } else {
             $filepath = sprintf(
                 '%s/%s',
                 $importFile->getFileDate()->format('Y/m'),
-                $importFile->getFile()->getFilename()
+                $importFile->getFilename()
             );
         }
 
         return $filepath;
-    }
-
-    /**
-     * @param $mimeType
-     * @return int|string
-     * @throws Exception
-     */
-    private function getFileType($mimeType)
-    {
-        foreach ($this->configuration->getImportSupportedTypes() as $type => $check) {
-            if (preg_match($check, $mimeType)) {
-                return $type;
-            }
-        }
-
-        return ImportFile::TYPE_UNKNOWN;
     }
 }
