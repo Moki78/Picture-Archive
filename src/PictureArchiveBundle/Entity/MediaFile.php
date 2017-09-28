@@ -15,9 +15,10 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class MediaFile
 {
+    const STATUS_CONFLICT = -2;
+    const STATUS_NOT_FOUND = -1;
     const STATUS_NEW = 1;
     const STATUS_IMPORTED = 2;
-    const STATUS_CONFLICT = 4;
 
     const TYPE_UNKNOWN = 0;
     const TYPE_IMAGE = 1;
@@ -78,7 +79,7 @@ class MediaFile
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="media_date", type="datetime")
+     * @ORM\Column(name="media_date", type="datetime", nullable=true)
      */
     private $mediaDate;
 
@@ -179,7 +180,7 @@ class MediaFile
      *
      * @return \DateTime
      */
-    public function getMediaDate(): \DateTime
+    public function getMediaDate(): ?\DateTime
     {
         return $this->mediaDate;
     }
@@ -187,11 +188,11 @@ class MediaFile
     /**
      * Set mediaDate
      *
-     * @param \DateTime $date
+     * @param \DateTime|null $date
      *
      * @return MediaFile
      */
-    public function setMediaDate(\DateTime $date): MediaFile
+    public function setMediaDate(?\DateTime $date): MediaFile
     {
         $this->mediaDate = $date;
 

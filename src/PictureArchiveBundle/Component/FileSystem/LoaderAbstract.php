@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use finfo;
 use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Util\FileHashInterface;
+use PictureArchiveBundle\Util\ImageExif;
 
 /**
  *
@@ -25,13 +26,20 @@ abstract class LoaderAbstract
     protected $finfo;
 
     /**
+     * @var ImageExif
+     */
+    private $imageExif;
+
+    /**
      * FlatLoader constructor.
      * @param FileHashInterface $hashService
+     * @param ImageExif $imageExif
      */
-    public function __construct(FileHashInterface $hashService)
+    public function __construct(FileHashInterface $hashService, ImageExif $imageExif)
     {
         $this->finfo = new finfo(FILEINFO_MIME); // return mime type ala mimetype extension
         $this->hashService = $hashService;
+        $this->imageExif = $imageExif;
     }
 
     /**
@@ -53,6 +61,7 @@ abstract class LoaderAbstract
         $file->setFileDate($fileDate);
         $file->setFileHash($this->hashService->hash($file->getPathname()));
         $file->setMimeType($this->finfo->file($file->getPathname()));
+        $file->setMediaDate($this->imageExif->getCreationDate($file->getPathname()));
 
         return $file;
     }

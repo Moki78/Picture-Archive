@@ -5,12 +5,12 @@ namespace PictureArchiveBundle\Service;
 use Doctrine\ORM\EntityManager;
 use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Component\FileInfo;
+use PictureArchiveBundle\Component\FilepathGenerator;
 use PictureArchiveBundle\Entity\MediaFile;
 use PictureArchiveBundle\Event\ImportEvent;
 use PictureArchiveBundle\Service\Import\Analyser;
+use PictureArchiveBundle\Service\Import\FileProcessor;
 use PictureArchiveBundle\Service\Import\FileRunner;
-use PictureArchiveBundle\Service\Index\FileProcessor;
-use PictureArchiveBundle\Util\ImageExif;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -48,14 +48,13 @@ class Import
     private $analyser;
 
     /**
-     * @var ImageExif
-     */
-    private $imageExifService;
-
-    /**
      * @var EventDispatcher
      */
     private $eventDispatcher;
+    /**
+     * @var FilepathGenerator
+     */
+    private $filepathGenerator;
 
     /**
      * Processor constructor.
@@ -65,7 +64,8 @@ class Import
      * @param FileProcessor $fileProcessor
      * @param Analyser $analyser
      * @param Configuration $configuration
-     * @param ImageExif $imageExif
+     * @param FilepathGenerator $filepathGenerator
+     * @internal param ImageExif $imageExif
      * @internal param Logger $logger
      */
     public function __construct(
@@ -75,7 +75,7 @@ class Import
         FileProcessor $fileProcessor,
         Analyser $analyser,
         Configuration $configuration,
-        ImageExif $imageExif
+        FilepathGenerator $filepathGenerator
     )
     {
         $this->em = $em;
@@ -83,8 +83,8 @@ class Import
         $this->fileProcessor = $fileProcessor;
         $this->configuration = $configuration;
         $this->analyser = $analyser;
-        $this->imageExifService = $imageExif;
         $this->eventDispatcher = $eventDispatcher;
+        $this->filepathGenerator = $filepathGenerator;
     }
 
     /**
@@ -115,8 +115,6 @@ class Import
             $importEvent->setFileInfo($importFile);
 
             try {
-                $this->setMediaDate($importFile);
-
                 $importFile = $this->analyser->analyse($importFile);
                 if (FileInfo::STATUS_INVALID === $importFile->getStatus()) {
                     $importEvent->setStatus(ImportEvent::STATUS_ANALYSE_FAILED);
@@ -176,20 +174,6 @@ class Import
 
     /**
      * @param FileInfo $importFile
-     * @return FileInfo
-     */
-    public function setMediaDate(FileInfo $importFile): FileInfo
-    {
-        $createDate = $this->imageExifService->getCreationDate($importFile->getPathname());
-        if ($createDate) {
-            $importFile->setMediaDate($createDate);
-        }
-
-        return $importFile;
-    }
-
-    /**
-     * @param FileInfo $importFile
      * @return MediaFile
      */
     private function createEntity(FileInfo $importFile): MediaFile
@@ -201,35 +185,9 @@ class Import
             ->setMimeType($importFile->getMimeType())
             ->setHash($importFile->getFileHash())
             ->setMediaDate($importFile->getMediaDate())
-            ->setPath($this->generateFilename($importFile))
+            ->setPath($this->filepathGenerator->generate($importFile))
             ->setName($importFile->getFilename());
 
         return $entity;
-    }
-
-    /**
-     * @param FileInfo $importFile
-     * @return string
-     */
-    private function generateFilename(FileInfo $importFile): string
-    {
-        $subDirectories = $this->configuration->getArchiveFiletypeSubdirectory();
-
-        if (array_key_exists($importFile->getFileType(), $subDirectories)) {
-            $filepath = sprintf(
-                '%s/%s/%s',
-                $subDirectories[$importFile->getFileType()],
-                $importFile->getFileDate()->format('Y/m'),
-                $importFile->getFilename()
-            );
-        } else {
-            $filepath = sprintf(
-                '%s/%s',
-                $importFile->getFileDate()->format('Y/m'),
-                $importFile->getFilename()
-            );
-        }
-
-        return $filepath;
     }
 }

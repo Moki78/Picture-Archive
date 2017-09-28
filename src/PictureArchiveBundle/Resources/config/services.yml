@@ -10,15 +10,22 @@ services:
       - [ setImportSupportedTypes, ["%picture_archive.import.supported_types%"]]
       - [ setTools, ["%picture_archive.tools%"]]
 
+  picture_archive.component.filepath_generator:
+    class: PictureArchiveBundle\Component\FilepathGenerator
+    arguments:
+      - "@picture_archive.component.configuration"
+
   picture_archive.component.file_system.flat_loader:
     class: PictureArchiveBundle\Component\FileSystem\FlatLoader
     arguments:
       - "@picture_archive.file.hash"
+      - "@picture_archive.image.info"
 
   picture_archive.component.file_system.recursive_loader:
     class: PictureArchiveBundle\Component\FileSystem\RecursiveLoader
     arguments:
       - "@picture_archive.file.hash"
+      - "@picture_archive.image.info"
 
   picture_archive.import:
     class: PictureArchiveBundle\Service\Import
@@ -26,10 +33,10 @@ services:
       - "@doctrine.orm.entity_manager"
       - "@event_dispatcher"
       - "@picture_archive.import.file_runner"
-      - "@picture_archive.index.file_processor"
+      - "@picture_archive.import.file_processor"
       - "@picture_archive.import.analyser"
       - "@picture_archive.component.configuration"
-      - "@picture_archive.image.info"
+      - "@picture_archive.component.filepath_generator"
 
   picture_archive.import.file_runner:
     class: PictureArchiveBundle\Service\Import\FileRunner
@@ -77,6 +84,12 @@ services:
         - { name: kernel.event_listener, event: picture-archive.import.error, method: importFile }
         - { name: kernel.event_listener, event: picture-archive.import.finish, method: finishImport }
 
+
+  picture_archive.import.file_processor:
+    class: PictureArchiveBundle\Service\Import\FileProcessor
+    arguments:
+      - "@picture_archive.component.configuration"
+
   picture_archive.import.failed_handler:
     class: PictureArchiveBundle\Service\Import\FailedHandler
     arguments:
@@ -99,21 +112,20 @@ services:
     arguments:
       - "%picture_archive.tool.image.info%"
 
-  picture_archive.index.file_processor:
-    class: PictureArchiveBundle\Service\Index\FileProcessor
+  picture_archive.indexer.file_runner:
+    class: PictureArchiveBundle\Service\Indexer\FileRunner
     arguments:
       - "@picture_archive.component.configuration"
+      - "@picture_archive.component.file_system.recursive_loader"
 
-  picture_archive.index.statistics:
+  picture_archive.indexer.statistics:
     class: PictureArchiveBundle\Service\Index\Stats
     arguments:
       - "@doctrine.orm.entity_manager"
 
-  picture_archive.index:
-    class: PictureArchiveBundle\Service\Index
+  picture_archive.indexer:
+    class: PictureArchiveBundle\Service\Indexer
     arguments:
       - "@doctrine.orm.entity_manager"
-      - "@event_dispatcher"
-      - "@picture_archive.import.file_runner"
       - "@picture_archive.component.configuration"
-      - "@picture_archive.image.info"
+      - "@picture_archive.indexer.file_runner"

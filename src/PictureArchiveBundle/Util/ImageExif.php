@@ -23,7 +23,7 @@ class ImageExif
      * @param string $importFilepath
      * @return \DateTime|null
      */
-    public function getCreationDate($importFilepath)
+    public function getCreationDate($importFilepath): ?\DateTime
     {
         $time = exec(
             sprintf('%s -T -createdate -d "%%s" "%s"', $this->command, $importFilepath),

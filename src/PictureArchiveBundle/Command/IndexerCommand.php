@@ -6,7 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use PictureArchiveBundle\Entity\MediaFile;
 use PictureArchiveBundle\Index\Processor;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,70 +22,93 @@ class IndexerCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('pa:indexer')
+            ->setName('picturearchive:indexer')
             ->setDescription('Picture Archive Indexer')
             ->addOption('reindex', null, InputOption::VALUE_NONE, 'reindex all')
             ->addOption('conflicts', null, InputOption::VALUE_NONE, 'list files with the same hashes')
-            ->addOption('fix', null, InputOption::VALUE_NONE, 'fix confliced files');
+            ->addOption('fix', null, InputOption::VALUE_NONE, 'fix confliced files')
+            ->addOption('progress', 'p', InputOption::VALUE_NONE, 'show progressbar');
     }
 
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
+     * @throws \LogicException
+     * @throws \InvalidArgumentException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $processor = $this->getContainer()->get('picture_archive.index.processor');
-
         if ($input->getOption('reindex')) {
-
-            $scanDirectory = $this->getContainer()->getParameter('picture_archive.base_directory');
-            $scanner = $this->getContainer()->get('picture_archive.file.scanner');
-
-            foreach ($this->getContainer()->getParameter('picture_archive.type_path') as $path) {
-                $directoryPath = rtrim($scanDirectory, '/') . '/' . $path;
-                $directory = new \RecursiveDirectoryIterator($directoryPath, \RecursiveDirectoryIterator::SKIP_DOTS);
-
-                $scanner->setDirectory($directory);
+            $progressOutput = $output;
+            if (!$input->getOption('progress')) {
+                $progressOutput = clone $output;
+                $progressOutput->setVerbosity(OutputInterface::VERBOSITY_QUIET);
             }
 
-            $processor->run();
-            $this->showStats($output);
+            $progress = new ProgressBar($progressOutput);
+            $progress->setFormat('debug');
 
+
+            $processor = $this->getContainer()->get('picture_archive.indexer');
+            $processor->run($progress);
+
+            $output->writeln('');
+            $output->writeln('');
+            $output->writeln('indexer done');
 
             return 0;
         }
 
-        if ($input->getOption('conflicts')) {
-            $conflictedHashes = $processor->getConflictedHashes();
-
-            $output->writeln('found ' . $conflictedHashes->count() . ' conflicted hashes');
-
-            foreach ($conflictedHashes as $hash => $items) {
-                echo PHP_EOL . $hash . ':' . PHP_EOL;
-
-                if ($input->getOption('fix')) {
-                    $this->askForDeletion($input, $output, $hash, $items);
-                } else {
-                    $items->forAll(
-                        function ($key, MediaFile $file) {
-                            printf(
-                                "    %s - %s" . PHP_EOL,
-                                $file->getMediaDate()->format('Y-m-d H:i:s'),
-                                $file->getPath()
-                            );
-                            return true;
-                        }
-                    );
-                }
-            }
-
-            return 0;
-        }
+//        if ($input->getOption('conflicts')) {
+//            $conflictedHashes = $processor->getConflictedHashes();
+//
+//            $output->writeln('found ' . $conflictedHashes->count() . ' conflicted hashes');
+//
+//            foreach ($conflictedHashes as $hash => $items) {
+//                echo PHP_EOL . $hash . ':' . PHP_EOL;
+//
+//                if ($input->getOption('fix')) {
+//                    $this->askForDeletion($input, $output, $hash, $items);
+//                } else {
+//                    $items->forAll(
+//                        function ($key, MediaFile $file) {
+//                            printf(
+//                                "    %s - %s" . PHP_EOL,
+//                                $file->getMediaDate()->format('Y-m-d H:i:s'),
+//                                $file->getPath()
+//                            );
+//                            return true;
+//                        }
+//                    );
+//                }
+//            }
+//
+//            return 0;
+//        }
 
         $this->showStats($output);
         return 0;
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    private function showStats(OutputInterface $output)
+    {
+        $stats = $this->getContainer()->get('picture_archive.index.statistics')->getStatistics();
+
+
+        $output->writeln("\nfiles: " . $stats['files']);
+
+        foreach ($stats['types'] as $type) {
+            $output->writeln($type['mimeType'] . ": " . $type['amount']);
+        }
+        $output->writeln("\n");
     }
 
     /**
@@ -100,7 +123,8 @@ class IndexerCommand extends ContainerAwareCommand
         OutputInterface $output,
         $hash,
         ArrayCollection $items
-    ) {
+    )
+    {
         $choices = array();
         $index = 0;
         foreach ($items as $file) {
@@ -135,7 +159,7 @@ class IndexerCommand extends ContainerAwareCommand
             $filepath = $choices[$index];
             foreach ($items as $file) {
                 if ($filepath == $file->getFilepath()) {
-                    $output->writeln("remove file ".$file->getFilepath());
+                    $output->writeln("remove file " . $file->getFilepath());
 
                     if ($processor->deleteConflictedFile($file)) {
                         $items->removeElement($file);
@@ -154,21 +178,5 @@ class IndexerCommand extends ContainerAwareCommand
 
         $this->getContainer()->get('doctrine.orm.entity_manager')->flush();
         return;
-    }
-
-    /**
-     * @param OutputInterface $output
-     */
-    private function showStats(OutputInterface $output)
-    {
-        $stats = $this->getContainer()->get('picture_archive.index.statistics')->getStatistics();
-
-
-        $output->writeln("\nfiles: " . $stats['files']);
-
-        foreach ($stats['types'] as $type) {
-            $output->writeln($type['mimeType'] . ": " . $type['amount']);
-        }
-        $output->writeln("\n");
     }
 }

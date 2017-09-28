@@ -78,7 +78,7 @@ class ImportEvent extends Event
     /**
      * @return int
      */
-    public function getStatus(): int
+    public function getStatus(): ?int
     {
         return $this->status;
     }
@@ -96,7 +96,7 @@ class ImportEvent extends Event
     /**
      * @return string
      */
-    public function getMessage(): string
+    public function getMessage(): ?string
     {
         return $this->message;
     }

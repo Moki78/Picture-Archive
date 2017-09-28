@@ -1,6 +1,6 @@
 <?php
 
-namespace PictureArchiveBundle\Service\Index;
+namespace PictureArchiveBundle\Service\Import;
 
 use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Entity\MediaFile;

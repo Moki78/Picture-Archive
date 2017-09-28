@@ -1,6 +1,6 @@
 <?php
 
-namespace PictureArchiveBundle\Service\Index;
+namespace PictureArchiveBundle\Service\Indexer;
 
 use Doctrine\ORM\EntityManager;
 
