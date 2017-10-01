@@ -2,6 +2,7 @@
 
 namespace PictureArchiveBundle\Service;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Component\FileInfo;
@@ -93,12 +94,12 @@ class Indexer
                 }
 
                 $mediaFiles->map(function (MediaFile $mediaFile) {
-                    $mediaFile->setStatus(MediaFile::STATUS_CONFLICT);
+                    $mediaFile->setStatus(MediaFile::STATUS_DUPLICATE);
                 });
 
                 if (!$mediaFile instanceof MediaFile) {
                     $mediaFile = $this->createEntity($file);
-                    $mediaFile->setStatus(MediaFile::STATUS_CONFLICT);
+                    $mediaFile->setStatus(MediaFile::STATUS_DUPLICATE);
                     $mediaFile->setPath($filepath);
 
                     $this->em->persist($mediaFile);
@@ -111,12 +112,12 @@ class Indexer
 
 
                     if ($filepath !== $mediaFile->getPath()) {
-                        $mediaFile->setStatus(MediaFile::STATUS_CONFLICT);
+                        $mediaFile->setStatus(MediaFile::STATUS_DUPLICATE);
 
                         // same hash, but different filepath
                         $newMediaFile = $this->createEntity($file);
                         $newMediaFile->setPath($filepath);
-                        $newMediaFile->setStatus(MediaFile::STATUS_CONFLICT);
+                        $newMediaFile->setStatus(MediaFile::STATUS_DUPLICATE);
 
                         $this->em->persist($newMediaFile);
                     } else {
@@ -162,5 +163,29 @@ class Indexer
         }
 
         return $mediaFile;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getDuplicates(): ArrayCollection
+    {
+        return $this->em->getRepository('PictureArchiveBundle:MediaFile')->findDuplicateHashes();
+
+    }
+
+    /**
+     * @param MediaFile $file
+     * @return bool
+     * @throws \Doctrine\ORM\ORMInvalidArgumentException
+     */
+    public function deleteConflictedFile(MediaFile $file): bool
+    {
+        $filepath = rtrim($this->configuration->getArchiveBaseDirectory()) . '/' . $file->getPath();
+        if (!file_exists($filepath) || unlink($filepath)) {
+            $this->em->remove($file);
+            return true;
+        }
+        return false;
     }
 }

@@ -35,7 +35,6 @@ services:
       - "@picture_archive.import.file_runner"
       - "@picture_archive.import.file_processor"
       - "@picture_archive.import.analyser"
-      - "@picture_archive.component.configuration"
       - "@picture_archive.component.filepath_generator"
 
   picture_archive.import.file_runner:
@@ -99,11 +98,6 @@ services:
       - { name: kernel.event_listener, event: picture-archive.import.save.failed, method: moveFile }
       - { name: kernel.event_listener, event: picture-archive.import.error, method: moveFile }
 
-
-  picture_archive.file.scanner:
-    class: PictureArchiveBundle\Util\FileScanner
-
-
   picture_archive.file.hash:
     class: PictureArchiveBundle\Util\FileHash\Md5
 
@@ -119,7 +113,7 @@ services:
       - "@picture_archive.component.file_system.recursive_loader"
 
   picture_archive.indexer.statistics:
-    class: PictureArchiveBundle\Service\Index\Stats
+    class: PictureArchiveBundle\Service\Indexer\Stats
     arguments:
       - "@doctrine.orm.entity_manager"
 

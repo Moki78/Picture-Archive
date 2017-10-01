@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class MediaFile
 {
-    const STATUS_CONFLICT = -2;
+    const STATUS_DUPLICATE = -2;
     const STATUS_NOT_FOUND = -1;
     const STATUS_NEW = 1;
     const STATUS_IMPORTED = 2;

@@ -3,7 +3,6 @@
 namespace PictureArchiveBundle\Service;
 
 use Doctrine\ORM\EntityManager;
-use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Component\FilepathGenerator;
 use PictureArchiveBundle\Entity\MediaFile;
@@ -38,11 +37,6 @@ class Import
     private $fileProcessor;
 
     /**
-     * @var Configuration
-     */
-    private $configuration;
-
-    /**
      * @var Analyser
      */
     private $analyser;
@@ -63,7 +57,6 @@ class Import
      * @param FileRunner $fileRunner
      * @param FileProcessor $fileProcessor
      * @param Analyser $analyser
-     * @param Configuration $configuration
      * @param FilepathGenerator $filepathGenerator
      * @internal param ImageExif $imageExif
      * @internal param Logger $logger
@@ -74,14 +67,12 @@ class Import
         FileRunner $fileRunner,
         FileProcessor $fileProcessor,
         Analyser $analyser,
-        Configuration $configuration,
         FilepathGenerator $filepathGenerator
     )
     {
         $this->em = $em;
         $this->fileRunner = $fileRunner;
         $this->fileProcessor = $fileProcessor;
-        $this->configuration = $configuration;
         $this->analyser = $analyser;
         $this->eventDispatcher = $eventDispatcher;
         $this->filepathGenerator = $filepathGenerator;
@@ -173,20 +164,25 @@ class Import
     }
 
     /**
-     * @param FileInfo $importFile
+     * @param FileInfo $file
      * @return MediaFile
      */
-    private function createEntity(FileInfo $importFile): MediaFile
+    private function createEntity(FileInfo $file): MediaFile
     {
         $entity = new MediaFile();
         $entity
             ->setType(MediaFile::TYPE_UNKNOWN)
             ->setStatus(MediaFile::STATUS_NEW)
-            ->setMimeType($importFile->getMimeType())
-            ->setHash($importFile->getFileHash())
-            ->setMediaDate($importFile->getMediaDate())
-            ->setPath($this->filepathGenerator->generate($importFile))
-            ->setName($importFile->getFilename());
+            ->setMimeType($file->getMimeType())
+            ->setHash($file->getFileHash())
+            ->setPath($this->filepathGenerator->generate($file))
+            ->setName($file->getFilename());
+
+        if ($file->getMediaDate()) {
+            $entity->setMediaDate($file->getMediaDate());
+        } else {
+            $entity->setMediaDate($file->getFileDate());
+        }
 
         return $entity;
     }

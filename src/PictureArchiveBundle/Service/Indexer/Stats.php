@@ -22,12 +22,14 @@ class Stats
 
     /**
      * @return array
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\NoResultException
      */
-    public function getStatistics()
+    public function getStatistics(): array
     {
-        return array(
-            'files' => $this->em->getRepository('PictureArchiveBundle\:File')->countAll(),
-            'types' => $this->em->getRepository('PictureArchiveBundle\:File')->countByType()
-        );
+        return [
+            'files' => $this->em->getRepository('PictureArchiveBundle:MediaFile')->countAll(),
+            'types' => $this->em->getRepository('PictureArchiveBundle:MediaFile')->countByType()
+        ];
     }
 }

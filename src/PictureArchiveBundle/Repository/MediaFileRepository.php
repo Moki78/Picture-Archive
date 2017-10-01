@@ -49,7 +49,7 @@ class MediaFileRepository extends EntityRepository
     /**
      * @return ArrayCollection
      */
-    public function findConflictedHashes(): ArrayCollection
+    public function findDuplicateHashes(): ArrayCollection
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder();
@@ -60,7 +60,7 @@ class MediaFileRepository extends EntityRepository
             ->addGroupBy('f.hash')
             ->andHaving('count(f.hash) > 1')
             ->addOrderBy('f.mediaDate')
-            ->setParameter(':status', MediaFile::STATUS_CONFLICT)
+            ->setParameter(':status', MediaFile::STATUS_DUPLICATE)
             ->getQuery();
 
         $result = new ArrayCollection();
