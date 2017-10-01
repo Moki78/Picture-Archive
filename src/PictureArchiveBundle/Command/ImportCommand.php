@@ -115,7 +115,7 @@ class ImportCommand extends ContainerAwareCommand
     {
         $progressOutput = $output;
         if (!$input->getOption('progress')) {
-            $progressOutput = clone ($output);
+            $progressOutput = clone $output;
             $progressOutput->setVerbosity(OutputInterface::VERBOSITY_QUIET);
         }
 
