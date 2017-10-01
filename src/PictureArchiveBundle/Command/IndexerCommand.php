@@ -103,15 +103,14 @@ class IndexerCommand extends ContainerAwareCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @param string $hash
      * @param ArrayCollection|MediaFile[] $items
-     * @throws \LogicException
-     * @throws \Symfony\Component\Console\Exception\LogicException
-     * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \LogicException
+     * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
+     * @throws \Symfony\Component\Console\Exception\LogicException
+     * @throws \Doctrine\ORM\ORMInvalidArgumentException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
      * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\ORMInvalidArgumentException
      */
     private function askForDeletion(
         InputInterface $input,
