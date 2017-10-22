@@ -17,11 +17,6 @@ class Configuration
     private $archiveBaseDirectory;
 
     /**
-     * @var array
-     */
-    private $archiveFiletypeSubdirectory = [];
-
-    /**
      *
      * @var string
      */
@@ -35,7 +30,7 @@ class Configuration
     /**
      * @var array
      */
-    private $importSupportedTypes = [];
+    private $supportedTypes = [];
 
     /**
      * @var int
@@ -65,24 +60,6 @@ class Configuration
     public function setArchiveBaseDirectory(string $archiveBaseDirectory): Configuration
     {
         $this->archiveBaseDirectory = $archiveBaseDirectory;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getArchiveFiletypeSubdirectory(): array
-    {
-        return $this->archiveFiletypeSubdirectory;
-    }
-
-    /**
-     * @param array $archiveFiletypeSubdirectory
-     * @return Configuration
-     */
-    public function setArchiveFiletypeSubdirectory(array $archiveFiletypeSubdirectory): Configuration
-    {
-        $this->archiveFiletypeSubdirectory = $archiveFiletypeSubdirectory;
         return $this;
     }
 
@@ -125,18 +102,18 @@ class Configuration
     /**
      * @return array
      */
-    public function getImportSupportedTypes(): array
+    public function getSupportedTypes(): array
     {
-        return $this->importSupportedTypes;
+        return $this->supportedTypes;
     }
 
     /**
-     * @param array $importSupportedTypes
+     * @param array $supportedTypes
      * @return Configuration
      */
-    public function setImportSupportedTypes(array $importSupportedTypes): Configuration
+    public function setSupportedTypes(array $supportedTypes): Configuration
     {
-        $this->importSupportedTypes = $importSupportedTypes;
+        $this->supportedTypes = $supportedTypes;
         return $this;
     }
 

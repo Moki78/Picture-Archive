@@ -2,49 +2,20 @@
 
 namespace PictureArchiveBundle\Service\Import;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Component\FileInfo;
-use PictureArchiveBundle\Component\FileSystem\LoaderAbstract;
+use PictureArchiveBundle\Service\FileRunnerAbstract;
 
 /**
  *
  * @package PictureArchiveBundle\Import
  * @author Moki <picture-archive@mokis-welt.de>
  */
-class FileRunner implements \Countable
+class FileRunner extends FileRunnerAbstract
 {
     /**
      * @var array
      */
     private $excludeList = array();
-
-    /**
-     * @var Configuration
-     */
-    private $configuration;
-
-    /**
-     * @var ArrayCollection
-     */
-    private $fileCollection;
-
-    /**
-     * @var LoaderAbstract
-     */
-    private $fileLoader;
-
-    /**
-     * FileRunner constructor.
-     *
-     * @param Configuration $configuration
-     * @param LoaderAbstract $fileLoader
-     */
-    public function __construct(Configuration $configuration, LoaderAbstract $fileLoader)
-    {
-        $this->configuration = $configuration;
-        $this->fileLoader = $fileLoader;
-    }
 
     /**
      * @param array $excludeList
@@ -68,19 +39,6 @@ class FileRunner implements \Countable
         return $this;
     }
 
-    public function count()
-    {
-        return $this->fileCollection->count();
-    }
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getFileCollection(): ArrayCollection
-    {
-        return $this->fileCollection;
-    }
-
     /**
      *
      */
@@ -92,9 +50,11 @@ class FileRunner implements \Countable
             $this->configuration->getImportBaseDirectory()
         );
 
-        $this->fileCollection = $fileCollection->filter(function (FileInfo $fileInfo) use ($that) {
+        $fileCollection = array_filter($fileCollection->getArrayCopy(), function (FileInfo $fileInfo) use ($that) {
             return $that->isValidFile($fileInfo);
         });
+
+        $this->fileCollection = new \ArrayIterator($fileCollection);
     }
 
     /**

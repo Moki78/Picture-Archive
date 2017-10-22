@@ -35,6 +35,10 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
+    /**
+     * @return NodeDefinition
+     * @throws \RuntimeException
+     */
     private function getArchiveNode()
     {
         $builder = new TreeBuilder();
@@ -43,10 +47,10 @@ class Configuration implements ConfigurationInterface
             ->info('archive configuration')
             ->children()
                 ->scalarNode('base_directory')->isRequired()->defaultNull()->end()
-                ->arrayNode('filetype_subdirectory')
+            ->arrayNode('supported_types')
                     ->children()
-                        ->scalarNode('images')->isRequired()->end()
-                        ->scalarNode('videos')->isRequired()->end()
+            ->arrayNode('image')->prototype('scalar')->end()->end()
+            ->arrayNode('video')->prototype('scalar')->end()->end()
                     ->end()
                 ->end()
             ->end();
@@ -67,12 +71,6 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->scalarNode('base_directory')->isRequired()->defaultNull()->end()
                 ->scalarNode('failed_directory')->isRequired()->defaultNull()->end()
-                ->arrayNode('supported_types')
-                    ->children()
-                        ->scalarNode('images')->isRequired()->end()
-                        ->scalarNode('videos')->isRequired()->end()
-                    ->end()
-                ->end()
                 ->integerNode('minimum_fileage')->isRequired()->end()
             ->end();
 

@@ -1,19 +1,17 @@
 <?php
 
-namespace PictureArchiveBundle\Component\FileSystem;
+namespace PictureArchiveBundle\Component;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use finfo;
-use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Util\FileHashInterface;
 use PictureArchiveBundle\Util\ImageExif;
 
 /**
  *
- * @package PictureArchiveBundle\Component\FileSystem
+ * @package PictureArchiveBundle\Component
  * @author Moki <picture-archive@mokis-welt.de>
  */
-abstract class LoaderAbstract
+class ExtendFileInfo
 {
     /**
      * @var FileHashInterface
@@ -43,18 +41,11 @@ abstract class LoaderAbstract
     }
 
     /**
-     * @param string $directory
-     * @return ArrayCollection
-     */
-    abstract public function getIterator(string $directory): ArrayCollection;
-
-    /**
      * @param FileInfo $file
      * @return FileInfo
      */
-    protected function extendFileInfo(FileInfo $file): FileInfo
+    public function extend(FileInfo $file): FileInfo
     {
-
         $fileDate = new \DateTime();
         $fileDate->setTimestamp($file->getMTime());
 

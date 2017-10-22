@@ -20,9 +20,9 @@ class MediaFile
     const STATUS_NEW = 1;
     const STATUS_IMPORTED = 2;
 
-    const TYPE_UNKNOWN = 0;
-    const TYPE_IMAGE = 1;
-    const TYPE_VIDEO = 2;
+    const TYPE_UNKNOWN = 'unknown';
+    const TYPE_IMAGE = 'image';
+    const TYPE_VIDEO = 'video';
 
     /**
      * @var int
@@ -35,9 +35,9 @@ class MediaFile
 
 
     /**
-     * @var int
+     * @var string
      *
-     * @ORM\Column(name="type", type="integer", nullable=true)
+     * @ORM\Column(name="type", type="string", nullable=true)
      */
     private $type;
 
@@ -109,18 +109,18 @@ class MediaFile
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getType(): int
+    public function getType(): string
     {
         return $this->type;
     }
 
     /**
-     * @param int $type
+     * @param string $type
      * @return MediaFile
      */
-    public function setType(int $type): MediaFile
+    public function setType(string $type): MediaFile
     {
         $this->type = $type;
 
@@ -188,11 +188,11 @@ class MediaFile
     /**
      * Set mediaDate
      *
-     * @param \DateTime|null $date
+     * @param \DateTime $date
      *
      * @return MediaFile
      */
-    public function setMediaDate(?\DateTime $date): MediaFile
+    public function setMediaDate(\DateTime $date): MediaFile
     {
         $this->mediaDate = $date;
 

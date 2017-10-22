@@ -33,7 +33,7 @@ class MimeType implements AnalyserInterface
      */
     public function analyse(FileInfo $fileInfo): bool
     {
-        foreach ($this->configuration->getImportSupportedTypes() as $type => $check) {
+        foreach ($this->configuration->getSupportedTypes() as $type => $check) {
             if (preg_match($check, $fileInfo->getMimeType())) {
                 $fileInfo->setStatus(FileInfo::STATUS_VALID);
                 return true;

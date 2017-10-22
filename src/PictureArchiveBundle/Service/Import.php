@@ -6,7 +6,14 @@ use Doctrine\ORM\EntityManager;
 use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Component\FilepathGenerator;
 use PictureArchiveBundle\Entity\MediaFile;
-use PictureArchiveBundle\Event\ImportEvent;
+use PictureArchiveBundle\Event\ImportAnalysisFailedEvent;
+use PictureArchiveBundle\Event\ImportErrorEvent;
+use PictureArchiveBundle\Event\ImportFileEvent;
+use PictureArchiveBundle\Event\ImportFinishEvent;
+use PictureArchiveBundle\Event\ImportInitializeEvent;
+use PictureArchiveBundle\Event\ImportSaveFailedEvent;
+use PictureArchiveBundle\Event\ImportSuccessEvent;
+use PictureArchiveBundle\Events;
 use PictureArchiveBundle\Service\Import\Analyser;
 use PictureArchiveBundle\Service\Import\FileProcessor;
 use PictureArchiveBundle\Service\Import\FileRunner;
@@ -86,12 +93,7 @@ class Import
      */
     public function run(ProgressBar $progressBar): bool
     {
-        $importEvent = new ImportEvent();
-
-        $this->eventDispatcher->dispatch(
-            'picture-archive.import.start',
-            $importEvent->setStatus(ImportEvent::STATUS_START)
-        );
+        $this->eventDispatcher->dispatch(Events::IMPORT_INITIALIZE, new ImportInitializeEvent());
 
         $this->fileProcessor->initialize();
 
@@ -99,19 +101,18 @@ class Import
 
         $progressBar->start($this->fileRunner->count());
 
-        foreach ($this->fileRunner->getFileCollection() as $importFile) {
+        foreach ($this->fileRunner as $importFile) {
             $progressBar->advance();
 
-            $importEvent = new ImportEvent();
-            $importEvent->setFileInfo($importFile);
+            $this->eventDispatcher->dispatch(Events::IMPORT_FILE, new ImportFileEvent($importFile));
 
             try {
                 $importFile = $this->analyser->analyse($importFile);
                 if (FileInfo::STATUS_INVALID === $importFile->getStatus()) {
-                    $importEvent->setStatus(ImportEvent::STATUS_ANALYSE_FAILED);
-                    $importEvent->setMessage($importFile->getStatusMessage());
-
-                    $this->eventDispatcher->dispatch('picture-archive.import.analyse.failed', $importEvent);
+                    $this->eventDispatcher->dispatch(
+                        Events::IMPORT_ANALYSIS_FAILED,
+                        new ImportAnalysisFailedEvent($importFile, $importFile->getStatusMessage())
+                    );
                     continue;
                 }
 
@@ -121,10 +122,10 @@ class Import
 
                 if (!$status) {
                     // could not rename file
-                    $importEvent->setStatus(ImportEvent::STATUS_SAVE_FAILED);
-                    $importEvent->setMessage('rename failed');
-
-                    $this->eventDispatcher->dispatch('picture-archive.import.save.failed', $importEvent);
+                    $this->eventDispatcher->dispatch(
+                        Events::IMPORT_SAVE_FAILED,
+                        new ImportSaveFailedEvent($importFile, $mediaFile, 'rename failed')
+                    );
 
                     continue;
                 }
@@ -135,19 +136,17 @@ class Import
                 $this->em->persist($mediaFile);
                 $this->em->flush();
 
-                $importEvent->setStatus(ImportEvent::STATUS_SUCCESS);
-
                 $this->eventDispatcher->dispatch(
-                    'picture-archive.import.success',
-                    $importEvent->setStatus(ImportEvent::STATUS_SUCCESS)
+                    Events::IMPORT_SUCCESS,
+                    new ImportSuccessEvent($importFile, $mediaFile)
                 );
 
             } catch (\Exception $e) {
                 // log Exception
-                $importEvent->setStatus(ImportEvent::STATUS_ERROR);
-                $importEvent->setMessage($e->getMessage());
-
-                $this->eventDispatcher->dispatch('picture-archive.import.error', new ImportEvent(1, ''));
+                $this->eventDispatcher->dispatch(
+                    Events::IMPORT_ERROR,
+                    new ImportErrorEvent($importFile, $e)
+                );
 
 
                 continue;
@@ -156,8 +155,8 @@ class Import
         $progressBar->finish();
 
         $this->eventDispatcher->dispatch(
-            'picture-archive.import.finish',
-            $importEvent->setStatus(ImportEvent::STATUS_FINISH)
+            Events::IMPORT_FINISH,
+            new ImportFinishEvent()
         );
 
         return true;
@@ -171,7 +170,7 @@ class Import
     {
         $entity = new MediaFile();
         $entity
-            ->setType(MediaFile::TYPE_UNKNOWN)
+            ->setType($file->getFileType())
             ->setStatus(MediaFile::STATUS_NEW)
             ->setMimeType($file->getMimeType())
             ->setHash($file->getFileHash())

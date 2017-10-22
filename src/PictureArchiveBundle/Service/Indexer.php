@@ -18,7 +18,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 class Indexer
 {
     /**
-     * @var FileRunner
+     * @var FileRunnerAbstract
      */
     private $fileRunner;
 
@@ -61,7 +61,6 @@ class Indexer
 
         $progressBar->start($this->fileRunner->count());
 
-
         $repository = $this->em->getRepository('PictureArchiveBundle:MediaFile');
 
         array_map(
@@ -72,7 +71,7 @@ class Indexer
         );
         $this->em->flush();
 
-        foreach ($this->fileRunner->getFileCollection() as $file) {
+        foreach ($this->fileRunner as $file) {
             $mediaFiles = $repository->findByHash($file->getFileHash());
 
             $filepath = str_replace(
@@ -93,7 +92,8 @@ class Indexer
                     }
                 }
 
-                $mediaFiles->map(function (MediaFile $mediaFile) {
+                $mediaFiles->map(function (MediaFile $mediaFile) use ($file) {
+                    $mediaFile = $this->updateEntity($mediaFile, $file);
                     $mediaFile->setStatus(MediaFile::STATUS_DUPLICATE);
                 });
 
@@ -122,7 +122,9 @@ class Indexer
                         $this->em->persist($newMediaFile);
                     } else {
                         // single file
+                        $mediaFile = $this->updateEntity($mediaFile, $file);
                         $mediaFile->setStatus(MediaFile::STATUS_IMPORTED);
+
                     }
                 } else {
                     // new file
@@ -151,8 +153,7 @@ class Indexer
         $mediaFile = new MediaFile();
         $mediaFile
             ->setHash($file->getFileHash())
-            ->setMediaDate($file->getMediaDate())
-            ->setType(MediaFile::TYPE_UNKNOWN)
+            ->setType($file->getFileType())
             ->setMimeType($file->getMimeType())
             ->setName($file->getFilename());
 
@@ -160,6 +161,26 @@ class Indexer
             $mediaFile->setMediaDate($file->getMediaDate());
         } else {
             $mediaFile->setMediaDate($file->getFileDate());
+        }
+
+        return $mediaFile;
+    }
+
+    /**
+     * @param MediaFile $mediaFile
+     * @param FileInfo $file
+     * @return MediaFile
+     */
+    private function updateEntity(MediaFile $mediaFile, FileInfo $file): MediaFile
+    {
+        $mediaFile
+            ->setHash($file->getFileHash())
+            ->setType($file->getFileType())
+            ->setMimeType($file->getMimeType())
+            ->setName($file->getFilename());
+
+        if ($file->getMediaDate()) {
+            $mediaFile->setMediaDate($file->getMediaDate());
         }
 
         return $mediaFile;

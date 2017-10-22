@@ -2,7 +2,6 @@
 
 namespace PictureArchiveBundle\Component\FileSystem;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use PictureArchiveBundle\Component\FileInfo;
 
 /**
@@ -10,13 +9,13 @@ use PictureArchiveBundle\Component\FileInfo;
  * @package PictureArchiveBundle\Component
  * @author Moki <picture-archive@mokis-welt.de>
  */
-class RecursiveLoader extends LoaderAbstract
+class RecursiveLoader implements LoaderInterface
 {
     /**
      * @param string $directoryPath
-     * @return ArrayCollection
+     * @return \ArrayIterator
      */
-    public function getIterator(string $directoryPath): ArrayCollection
+    public function getIterator(string $directoryPath): \ArrayIterator
     {
         $fileList = [];
 
@@ -25,11 +24,11 @@ class RecursiveLoader extends LoaderAbstract
         foreach (new \RecursiveIteratorIterator($directory) as $file) {
             $fileInfo = $file->getFileInfo(FileInfo::class);
             if ($this->isValidFile($fileInfo)) {
-                $fileList[] = $this->extendFileInfo($fileInfo);
+                $fileList[] = $fileInfo;
             }
         }
 
-        return new ArrayCollection($fileList);
+        return new \ArrayIterator($fileList);
     }
 
     /**

@@ -9,9 +9,7 @@ namespace PictureArchiveBundle\Component;
  */
 class FileInfo extends \SplFileInfo
 {
-    const TYPE_UNKNOWN = 0;
-    const TYPE_IMAGE = 1;
-    const TYPE_VIDEO = 2;
+    const TYPE_UNKNOWN = 'unknown';
 
     const STATUS_VALID = 1;
     const STATUS_INVALID = 2;
@@ -116,10 +114,10 @@ class FileInfo extends \SplFileInfo
     }
 
     /**
-     * @param \DateTime $mediaDate
+     * @param \DateTime|null $mediaDate
      * @return FileInfo
      */
-    public function setMediaDate(\DateTime $mediaDate): FileInfo
+    public function setMediaDate(?\DateTime $mediaDate): FileInfo
     {
         $this->mediaDate = $mediaDate;
         return $this;

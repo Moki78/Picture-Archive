@@ -1,14 +1,20 @@
 picture_archive:
     archive:
         base_directory: '%picture_archive.archive.base_directory%'
-        filetype_subdirectory: '%picture_archive.archive.filetype_subdirectory%'
+        supported_types:
+            image:
+                - "/image\\//i"
+                - "application/x-iso9660-image"
+            video:
+                - "video/mp4"
+                - "video/quicktime"
+                - "video/x-matroska"
+                - "video/x-ms-asf"
+                - "video/x-msvideo"
 
     import:
         base_directory: '%picture_archive.import.base_directory%'
         failed_directory: '%picture_archive.import.failed_directory%'
-        supported_types:
-            images: "/image\\//i"
-            videos: "/video\\//i"
         minimum_fileage: 180
 
     tools:

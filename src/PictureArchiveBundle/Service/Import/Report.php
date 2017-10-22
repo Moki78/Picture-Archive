@@ -3,7 +3,10 @@
 namespace PictureArchiveBundle\Service\Import;
 
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Event\ImportEvent;
+use PictureArchiveBundle\Event\EventInterface;
+use PictureArchiveBundle\Event\ImportFileEvent;
+use PictureArchiveBundle\Event\ImportFinishEvent;
+use PictureArchiveBundle\Event\ImportInitializeEvent;
 
 /**
  *
@@ -27,9 +30,9 @@ class Report
     }
 
     /**
-     * @param ImportEvent $importEvent
+     * @param ImportInitializeEvent $importEvent
      */
-    public function startImport(ImportEvent $importEvent): void
+    public function startImport(ImportInitializeEvent $importEvent): void
     {
         $this->writeToReporter([
             'import file',
@@ -49,45 +52,31 @@ class Report
     }
 
     /**
-     * @param ImportEvent $importEvent
+     * @param ImportFinishEvent $importEvent
      */
-    public function finishImport(ImportEvent $importEvent): void
+    public function finishImport(ImportFinishEvent $importEvent): void
     {
 
     }
 
     /**
-     * @param ImportEvent $importEvent
+     * @param ImportFileEvent $event
      */
-    public function importFile(ImportEvent $importEvent): void
+    public function importFile(ImportFileEvent $event): void
     {
+        $status = null;
+        $message = '';
+        if ($event instanceof EventInterface) {
+            $status = $event->getStatus();
+            $message = $event->getMessage();
+        }
+
+
         $this->writeToReporter([
-            $importEvent->getFileInfo()->getPathname(),
-            $this->getStatusKey($importEvent->getStatus()),
-            $importEvent->getMessage(),
+            $event->getFileInfo()->getPathname(),
+            $status,
+            $message,
         ]);
     }
 
-    /**
-     * @param int $status
-     * @return string
-     */
-    private function getStatusKey(int $status): string
-    {
-        switch ($status) {
-            case ImportEvent::STATUS_START:
-                return 'start';
-            case ImportEvent::STATUS_ANALYSE_FAILED:
-                return 'analyse failed';
-            case ImportEvent::STATUS_SAVE_FAILED:
-                return 'save failed';
-            case ImportEvent::STATUS_SUCCESS:
-                return 'success';
-            case ImportEvent::STATUS_ERROR:
-                return 'error';
-            case ImportEvent::STATUS_FINISH:
-                return 'finish';
-        }
-        return '';
-    }
 }

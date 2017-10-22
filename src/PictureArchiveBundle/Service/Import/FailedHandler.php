@@ -4,7 +4,8 @@ namespace PictureArchiveBundle\Service\Import;
 
 use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Component\FileInfo;
-use PictureArchiveBundle\Event\ImportEvent;
+use PictureArchiveBundle\Event\ImportAnalysisFailedEvent;
+use PictureArchiveBundle\Event\ImportFileEvent;
 
 /**
  *
@@ -28,13 +29,13 @@ class FailedHandler
     }
 
     /**
-     * @param ImportEvent $importEvent
+     * @param ImportFileEvent $importEvent
      * @throws \RuntimeException
      */
-    public function moveFile(ImportEvent $importEvent): void
+    public function moveFile(ImportFileEvent $importEvent): void
     {
-        if (ImportEvent::STATUS_ANALYSE_FAILED === $importEvent->getStatus()) {
-            if ($importEvent->getFileInfo() && FileInfo::STATUS_WAIT === $importEvent->getFileInfo()->getStatus()) {
+        if ($importEvent instanceof ImportAnalysisFailedEvent) {
+            if (FileInfo::STATUS_WAIT === $importEvent->getFileInfo()->getStatus()) {
                 return;
             }
         }
@@ -43,10 +44,8 @@ class FailedHandler
 
         $failedDirectory = new \SplFileInfo($this->configuration->getImportFailedDirectory());
 
-        if (!$failedDirectory->isDir()) {
-            if (!mkdir($failedDirectory->getPathname(), 0775, true)) {
-                throw new \RuntimeException("could not create directory '{$failedDirectory->getPathname()}'");
-            }
+        if (!$failedDirectory->isDir() && !mkdir($failedDirectory->getPathname(), 0775, true)) {
+            throw new \RuntimeException("could not create directory '{$failedDirectory->getPathname()}'");
         }
 
         if (!$failedDirectory->isWritable()) {

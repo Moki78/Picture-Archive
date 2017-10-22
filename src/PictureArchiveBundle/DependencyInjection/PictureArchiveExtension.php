@@ -16,13 +16,14 @@ class PictureArchiveExtension extends Extension
 {
     /**
      * {@inheritdoc}
+     * @throws \Symfony\Component\DependencyInjection\Exception\BadMethodCallException
      */
     public function load(array $configs, ContainerBuilder $container)
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter("{$this->getAlias()}.import.supported_types", $config['import']['supported_types']);
+        $container->setParameter("{$this->getAlias()}.supported_types", $config['archive']['supported_types']);
         $container->setParameter("{$this->getAlias()}.import.minimum_fileage", $config['import']['minimum_fileage']);
         $container->setParameter("{$this->getAlias()}.tools", $config['tools']);
 

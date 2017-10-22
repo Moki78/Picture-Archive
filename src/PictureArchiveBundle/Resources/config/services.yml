@@ -3,29 +3,26 @@ services:
     class: PictureArchiveBundle\Component\Configuration
     calls:
       - [ setArchiveBaseDirectory, ["%picture_archive.archive.base_directory%"] ]
-      - [ setArchiveFiletypeSubdirectory, ["%picture_archive.archive.filetype_subdirectory%"] ]
       - [ setImportBaseDirectory, ["%picture_archive.import.base_directory%"]]
       - [ setImportFailedDirectory, ["%picture_archive.import.failed_directory%"]]
       - [ setImportMinimumFileAge, ["%picture_archive.import.minimum_fileage%"]]
-      - [ setImportSupportedTypes, ["%picture_archive.import.supported_types%"]]
+      - [ setSupportedTypes, ["%picture_archive.supported_types%"]]
       - [ setTools, ["%picture_archive.tools%"]]
 
   picture_archive.component.filepath_generator:
     class: PictureArchiveBundle\Component\FilepathGenerator
+
+  picture_archive.component.extend_file_info:
+    class: PictureArchiveBundle\Component\ExtendFileInfo
     arguments:
-      - "@picture_archive.component.configuration"
+      - "@picture_archive.file.hash"
+      - "@picture_archive.image.info"
 
   picture_archive.component.file_system.flat_loader:
     class: PictureArchiveBundle\Component\FileSystem\FlatLoader
-    arguments:
-      - "@picture_archive.file.hash"
-      - "@picture_archive.image.info"
 
   picture_archive.component.file_system.recursive_loader:
     class: PictureArchiveBundle\Component\FileSystem\RecursiveLoader
-    arguments:
-      - "@picture_archive.file.hash"
-      - "@picture_archive.image.info"
 
   picture_archive.import:
     class: PictureArchiveBundle\Service\Import
@@ -42,6 +39,7 @@ services:
     arguments:
       - "@picture_archive.component.configuration"
       - "@picture_archive.component.file_system.flat_loader"
+      - "@picture_archive.component.extend_file_info"
 
   picture_archive.import.analyser:
     class: PictureArchiveBundle\Service\Import\Analyser
@@ -76,7 +74,7 @@ services:
       arguments:
             - "@picture_archive.component.configuration"
       tags:
-        - { name: kernel.event_listener, event: picture-archive.import.start, method: startImport }
+        - { name: kernel.event_listener, event: picture-archive.import.initialize, method: startImport }
         - { name: kernel.event_listener, event: picture-archive.import.analyse.failed, method: importFile }
         - { name: kernel.event_listener, event: picture-archive.import.save.failed, method: importFile }
         - { name: kernel.event_listener, event: picture-archive.import.success, method: importFile }
@@ -111,6 +109,7 @@ services:
     arguments:
       - "@picture_archive.component.configuration"
       - "@picture_archive.component.file_system.recursive_loader"
+      - "@picture_archive.component.extend_file_info"
 
   picture_archive.indexer.statistics:
     class: PictureArchiveBundle\Service\Indexer\Stats

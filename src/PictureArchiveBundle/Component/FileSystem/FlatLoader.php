@@ -2,7 +2,6 @@
 
 namespace PictureArchiveBundle\Component\FileSystem;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use PictureArchiveBundle\Component\FileInfo;
 
 /**
@@ -10,13 +9,13 @@ use PictureArchiveBundle\Component\FileInfo;
  * @package PictureArchiveBundle\Component
  * @author Moki <picture-archive@mokis-welt.de>
  */
-class FlatLoader extends LoaderAbstract
+class FlatLoader implements LoaderInterface
 {
     /**
      * @param string $directory
-     * @return ArrayCollection
+     * @return \ArrayIterator
      */
-    public function getIterator(string $directory): ArrayCollection
+    public function getIterator(string $directory): \ArrayIterator
     {
         $fileList = [];
 
@@ -24,11 +23,11 @@ class FlatLoader extends LoaderAbstract
             /** @var FileInfo $fileInfo */
             $fileInfo = $file->getFileInfo(FileInfo::class);
             if ($this->isValidFile($fileInfo)) {
-                $fileList[] = $this->extendFileInfo($fileInfo);
+                $fileList[] = $fileInfo;
             }
         }
 
-        return new ArrayCollection($fileList);
+        return new \ArrayIterator($fileList);
     }
 
     /**
