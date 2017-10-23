@@ -7,12 +7,13 @@ namespace PictureArchiveBundle\Component\Report;
  * @package PictureArchiveBundle\Component\Report
  * @author Moki <picture-archive@mokis-welt.de>
  */
-class Csv implements ReportInterface
+class Text implements ReportInterface
 {
     /**
      * @var \SplFileObject
      */
     private $file;
+
 
     /**
      * @var string|null
@@ -20,7 +21,7 @@ class Csv implements ReportInterface
     private $outputDirectory;
 
     /**
-     * Csv constructor.
+     * Text constructor.
      * @param null $outputDirectory
      */
     public function __construct($outputDirectory = null)
@@ -32,16 +33,9 @@ class Csv implements ReportInterface
     {
         $file = 'php://stdout';
         if ($this->outputDirectory && is_dir($this->outputDirectory)) {
-            $file = sprintf('%s/reporter-%s.csv', $this->outputDirectory, date('YmdHis'));
+            $file = sprintf('%s/reporter-%s.txt', $this->outputDirectory, date('YmdHis'));
         }
         $this->file = new \SplFileObject($file, 'a');
-
-        $this->file->fputcsv([
-            'datetime',
-            'import file',
-            'status',
-            'message'
-        ]);
     }
 
     /**
@@ -49,7 +43,6 @@ class Csv implements ReportInterface
      */
     public function write(array $item): void
     {
-        array_unshift($item, date('Y-m-d H:i:s'));
-        $this->file->fputcsv($item);
+        $this->file->fwrite(implode(' - ', $item) . PHP_EOL);
     }
 }

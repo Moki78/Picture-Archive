@@ -38,6 +38,11 @@ class Configuration
     private $importMinimumFileAge;
 
     /**
+     * @var int
+     */
+    private $importFileLimit;
+
+    /**
      * @var array
      */
     private $tools = [];
@@ -96,6 +101,27 @@ class Configuration
     public function setImportFailedDirectory(string $importFailedDirectory): Configuration
     {
         $this->importFailedDirectory = $importFailedDirectory;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getImportFileLimit(): int
+    {
+        return $this->importFileLimit;
+    }
+
+    /**
+     * @param int $importFileLimit
+     * @return Configuration
+     */
+    public function setImportFileLimit(int $importFileLimit): Configuration
+    {
+        if ($importFileLimit > 0) {
+            $this->importFileLimit = $importFileLimit;
+        }
+
         return $this;
     }
 

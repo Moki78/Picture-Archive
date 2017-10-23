@@ -3,6 +3,7 @@
 namespace PictureArchiveBundle\Service;
 
 use Doctrine\ORM\EntityManager;
+use PictureArchiveBundle\Component\Configuration;
 use PictureArchiveBundle\Component\FileInfo;
 use PictureArchiveBundle\Component\FilepathGenerator;
 use PictureArchiveBundle\Entity\MediaFile;
@@ -56,11 +57,16 @@ class Import
      * @var FilepathGenerator
      */
     private $filepathGenerator;
+    /**
+     * @var Configuration
+     */
+    private $configuration;
 
     /**
      * Processor constructor.
      * @param EntityManager $em
      * @param EventDispatcherInterface $eventDispatcher
+     * @param Configuration $configuration
      * @param FileRunner $fileRunner
      * @param FileProcessor $fileProcessor
      * @param Analyser $analyser
@@ -71,6 +77,7 @@ class Import
     public function __construct(
         EntityManager $em,
         EventDispatcherInterface $eventDispatcher,
+        Configuration $configuration,
         FileRunner $fileRunner,
         FileProcessor $fileProcessor,
         Analyser $analyser,
@@ -83,6 +90,7 @@ class Import
         $this->analyser = $analyser;
         $this->eventDispatcher = $eventDispatcher;
         $this->filepathGenerator = $filepathGenerator;
+        $this->configuration = $configuration;
     }
 
     /**
@@ -102,6 +110,9 @@ class Import
         $progressBar->start($this->fileRunner->count());
 
         foreach ($this->fileRunner as $importFile) {
+            if ($progressBar->getProgress() >= $this->configuration->getImportFileLimit()) {
+                break;
+            }
             $progressBar->advance();
 
             $this->eventDispatcher->dispatch(Events::IMPORT_FILE, new ImportFileEvent($importFile));

@@ -21,18 +21,20 @@ class ImportCommand extends ContainerAwareCommand
         $this
             ->setName('picturearchive:import')
             ->setDescription('import cron script')
-            ->addOption('output', 'o', InputOption::VALUE_REQUIRED)
+
             ->addOption('progress', 'p', InputOption::VALUE_NONE, 'show progressbar')
+            ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, 'import limit (default: 100)', 100)
+            ->addOption('report-directory', null, InputOption::VALUE_OPTIONAL, 'report directory (default: php://stdout)')
             ->addOption(
-                'reporter-stdout',
+                'report-text',
                 null,
                 InputOption::VALUE_NONE,
-                'import reporter stdout (default)')
+                'import reporter text')
             ->addOption(
-                'reporter-csv',
+                'report-csv',
                 null,
-                InputOption::VALUE_OPTIONAL,
-                'import reporter csv, if no option value, stdout is used'
+                InputOption::VALUE_NONE,
+                'import reporter csv'
 
             );
     }
@@ -51,32 +53,31 @@ class ImportCommand extends ContainerAwareCommand
         $configuration = $this->getContainer()->get('picture_archive.component.configuration');
 
         // reporter
-        if (false !== $input->getOption('reporter-csv')) {
-            $filepath = $input->getOption('reporter-csv');
-            if ($filepath) {
-                $this->checkFile($filepath);
-            } else {
-                $filepath = 'php://stdout';
-            }
-
-            $configuration->addReporter(new Report\Csv($filepath));
+        if ($directory = $input->getOption('report-directory')) {
+            $this->checkDirectory($directory);
         }
 
-        if ($input->getOption('reporter-stdout') || 0 === count($configuration->getReporter())) {
-            $configuration->addReporter(new Report\Stdout());
+        if ($input->getOption('report-text')) {
+            $configuration->addReporter(new Report\Text($directory));
         }
+
+        if ($input->getOption('report-csv')) {
+            $configuration->addReporter(new Report\Csv($directory));
+        }
+
+        $configuration->setImportFileLimit((int)$input->getOption('limit'));
     }
 
     /**
-     * @param $filepath
+     * @param $directory
      * @return bool
      * @throws \InvalidArgumentException
      */
-    private function checkFile($filepath): bool
+    private function checkDirectory($directory): bool
     {
-        $realpath = realpath($filepath);
+        $realpath = realpath($directory);
 
-        if (file_exists($realpath) && !is_dir($realpath)) {
+        if (file_exists($realpath) && is_dir($realpath)) {
             if (is_writable($realpath)) {
                 return true;
             }
@@ -84,17 +85,12 @@ class ImportCommand extends ContainerAwareCommand
             throw new \InvalidArgumentException("file '{$realpath}' is not writable");
         }
 
-        if (is_dir($realpath)) {
-            throw new \InvalidArgumentException("file '{$realpath}' is a dirctory");
+        if (is_file($realpath)) {
+            throw new \InvalidArgumentException("file '{$realpath}' is a file, must be a directory");
         }
 
-        $directorypath = dirname($filepath);
-        if (!is_dir($directorypath)) {
-            throw new \InvalidArgumentException("save directory '{$directorypath}' is not a dirctory");
-        }
-
-        if (!is_writable($directorypath)) {
-            throw new \InvalidArgumentException("save directory '{$directorypath}' is not writeable");
+        if (!mkdir($directory)) {
+            throw new \InvalidArgumentException("could not create directory'{$directory}'");
         }
 
         return true;

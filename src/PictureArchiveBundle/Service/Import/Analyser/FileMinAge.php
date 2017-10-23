@@ -33,7 +33,7 @@ class FileMinAge implements AnalyserInterface
      */
     public function analyse(FileInfo $fileInfo): bool
     {
-        if ($fileInfo->getFileDate()->getTimestamp() + $this->configuration->getImportMinimumFileAge() < time()) {
+        if ($fileInfo->getCTime() + $this->configuration->getImportMinimumFileAge() < time()) {
             $fileInfo->setStatus(FileInfo::STATUS_VALID);
             return true;
         }

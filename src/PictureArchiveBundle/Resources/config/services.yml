@@ -29,6 +29,7 @@ services:
     arguments:
       - "@doctrine.orm.entity_manager"
       - "@event_dispatcher"
+      - "@picture_archive.component.configuration"
       - "@picture_archive.import.file_runner"
       - "@picture_archive.import.file_processor"
       - "@picture_archive.import.analyser"

@@ -34,11 +34,9 @@ class Report
      */
     public function startImport(ImportInitializeEvent $importEvent): void
     {
-        $this->writeToReporter([
-            'import file',
-            'status',
-            'message'
-        ]);
+        foreach ($this->configuration->getReporter() as $reporter) {
+            $reporter->initialize();
+        }
     }
 
     /**

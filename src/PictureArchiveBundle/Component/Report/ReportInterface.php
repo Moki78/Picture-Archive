@@ -8,6 +8,8 @@ namespace PictureArchiveBundle\Component\Report;
  */
 interface ReportInterface
 {
+    public function initialize(): void;
+
     /**
      * @param array $item
      */
