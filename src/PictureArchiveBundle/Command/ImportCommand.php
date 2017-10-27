@@ -23,7 +23,7 @@ class ImportCommand extends ContainerAwareCommand
             ->setDescription('import cron script')
 
             ->addOption('progress', 'p', InputOption::VALUE_NONE, 'show progressbar')
-            ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, 'import limit (default: 100)', 100)
+            ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, 'import limit (default: 1000)', 1000)
             ->addOption('report-directory', null, InputOption::VALUE_OPTIONAL, 'report directory (default: php://stdout)')
             ->addOption(
                 'report-text',
@@ -109,6 +109,8 @@ class ImportCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $defaultReporter = $this->getContainer()->get('picture_archive.import.report.stats');
+
         $progressOutput = $output;
         if (!$input->getOption('progress')) {
             $progressOutput = clone $output;
@@ -124,6 +126,14 @@ class ImportCommand extends ContainerAwareCommand
 
         $output->writeln('');
         $output->writeln('');
-        $output->writeln('import done');
+        $output->writeln(
+            sprintf(
+                'import done (processed: %d, success: %d, failed: %d, error: %d)',
+                $defaultReporter->getAmount(),
+                $defaultReporter->getSuccess(),
+                $defaultReporter->getFailed(),
+                $defaultReporter->getError()
+            )
+        );
     }
 }

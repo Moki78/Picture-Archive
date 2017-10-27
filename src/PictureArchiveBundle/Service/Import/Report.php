@@ -3,7 +3,6 @@
 namespace PictureArchiveBundle\Service\Import;
 
 use PictureArchiveBundle\Component\Configuration;
-use PictureArchiveBundle\Event\EventInterface;
 use PictureArchiveBundle\Event\ImportFileEvent;
 use PictureArchiveBundle\Event\ImportFinishEvent;
 use PictureArchiveBundle\Event\ImportInitializeEvent;
@@ -30,9 +29,9 @@ class Report
     }
 
     /**
-     * @param ImportInitializeEvent $importEvent
+     * @param ImportInitializeEvent $event
      */
-    public function startImport(ImportInitializeEvent $importEvent): void
+    public function initialize(ImportInitializeEvent $event): void
     {
         foreach ($this->configuration->getReporter() as $reporter) {
             $reporter->initialize();
@@ -40,41 +39,22 @@ class Report
     }
 
     /**
-     * @param array $line
+     * @param ImportFinishEvent $event
      */
-    private function writeToReporter(array $line): void
+    public function finish(ImportFinishEvent $event): void
     {
         foreach ($this->configuration->getReporter() as $reporter) {
-            $reporter->write($line);
+            $reporter->finish();
         }
-    }
-
-    /**
-     * @param ImportFinishEvent $importEvent
-     */
-    public function finishImport(ImportFinishEvent $importEvent): void
-    {
-
     }
 
     /**
      * @param ImportFileEvent $event
      */
-    public function importFile(ImportFileEvent $event): void
+    public function sendToReporter(ImportFileEvent $event): void
     {
-        $status = null;
-        $message = '';
-        if ($event instanceof EventInterface) {
-            $status = $event->getStatus();
-            $message = $event->getMessage();
+        foreach ($this->configuration->getReporter() as $reporter) {
+            $reporter->write($event->getFileInfo(), $event->getStatus(), $event->getMessage());
         }
-
-
-        $this->writeToReporter([
-            $event->getFileInfo()->getPathname(),
-            $status,
-            $message,
-        ]);
     }
-
 }

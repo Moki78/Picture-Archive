@@ -1,0 +1,10 @@
+# file picture-archive.import.timer
+[Unit]
+Description=picture-archive import timer
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=15min
+
+[Install]
+WantedBy=basic.target

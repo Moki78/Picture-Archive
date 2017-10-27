@@ -16,7 +16,7 @@ class ImportFileEvent extends Event implements EventInterface
     /**
      * @var FileInfo
      */
-    protected $FileInfo;
+    protected $fileInfo;
 
     /**
      * ImportFailedEvent constructor.
@@ -45,16 +45,16 @@ class ImportFileEvent extends Event implements EventInterface
      */
     public function getFileInfo(): FileInfo
     {
-        return $this->FileInfo;
+        return $this->fileInfo;
     }
 
     /**
-     * @param FileInfo $FileInfo
+     * @param FileInfo $fileInfo
      * @return ImportFileEvent
      */
-    public function setFileInfo(FileInfo $FileInfo): ImportFileEvent
+    public function setFileInfo(FileInfo $fileInfo): ImportFileEvent
     {
-        $this->FileInfo = $FileInfo;
+        $this->fileInfo = $fileInfo;
         return $this;
     }
 }

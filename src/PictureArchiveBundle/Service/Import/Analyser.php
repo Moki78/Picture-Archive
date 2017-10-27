@@ -35,7 +35,6 @@ class Analyser
     {
         foreach ($this->analyserCollection as $analyser) {
             if (!$analyser->analyse($file)) {
-                $file->setStatus(FileInfo::STATUS_INVALID);
                 return $file;
             }
         }

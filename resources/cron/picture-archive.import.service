@@ -1,0 +1,7 @@
+# file picture-archive.import.service
+[Unit]
+Description=picture-archive import
+
+[Service]
+ExecStart=/home/projects/picture-archive/bin/console picturearchive:import -h
+#ExecStart=bin/console picturearchive:import -p -l 5 --report-directory=/tmp/import --report-text --report-csv -vvvv

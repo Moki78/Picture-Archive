@@ -119,7 +119,7 @@ class Import
 
             try {
                 $importFile = $this->analyser->analyse($importFile);
-                if (FileInfo::STATUS_INVALID === $importFile->getStatus()) {
+                if (FileInfo::STATUS_VALID !== $importFile->getStatus()) {
                     $this->eventDispatcher->dispatch(
                         Events::IMPORT_ANALYSIS_FAILED,
                         new ImportAnalysisFailedEvent($importFile, $importFile->getStatusMessage())

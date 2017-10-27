@@ -2,6 +2,8 @@
 
 namespace PictureArchiveBundle\Component\Report;
 
+use PictureArchiveBundle\Component\FileInfo;
+
 /**
  *
  * @package PictureArchiveBundle\Component\Report
@@ -30,6 +32,37 @@ class Csv implements ReportInterface
 
     public function initialize(): void
     {
+
+    }
+
+    /**
+     * @param FileInfo $fileInfo
+     * @param null|string $status
+     * @param null|string $message
+     */
+    public function write(FileInfo $fileInfo, ?string $status, ?string $message): void
+    {
+        $this->initializeFile();
+
+        $this->file->fputcsv([
+            date('Y-m-d H:i:s'),
+            $fileInfo->getPathname(),
+            $status,
+            $message
+        ]);
+    }
+
+    public function finish(): void
+    {
+
+    }
+
+    private function initializeFile(): void
+    {
+        if ($this->file) {
+            return;
+        }
+
         $file = 'php://stdout';
         if ($this->outputDirectory && is_dir($this->outputDirectory)) {
             $file = sprintf('%s/reporter-%s.csv', $this->outputDirectory, date('YmdHis'));
@@ -42,14 +75,5 @@ class Csv implements ReportInterface
             'status',
             'message'
         ]);
-    }
-
-    /**
-     * @param array $item
-     */
-    public function write(array $item): void
-    {
-        array_unshift($item, date('Y-m-d H:i:s'));
-        $this->file->fputcsv($item);
     }
 }

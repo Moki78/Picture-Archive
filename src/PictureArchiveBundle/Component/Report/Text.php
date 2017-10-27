@@ -2,6 +2,8 @@
 
 namespace PictureArchiveBundle\Component\Report;
 
+use PictureArchiveBundle\Component\FileInfo;
+
 /**
  *
  * @package PictureArchiveBundle\Component\Report
@@ -31,18 +33,43 @@ class Text implements ReportInterface
 
     public function initialize(): void
     {
+
+    }
+
+    /**
+     * @param FileInfo $fileInfo
+     * @param null|string $status
+     * @param null|string $message
+     */
+    public function write(FileInfo $fileInfo, ?string $status, ?string $message): void
+    {
+        $this->initializeFile();
+
+        $this->file->fwrite(
+            sprintf(
+                '%s - %s - %s',
+                $fileInfo->getPathname(),
+                $status,
+                $message
+            )
+        );
+    }
+
+    public function finish(): void
+    {
+
+    }
+
+    private function initializeFile(): void
+    {
+        if ($this->file) {
+            return;
+        }
+
         $file = 'php://stdout';
         if ($this->outputDirectory && is_dir($this->outputDirectory)) {
             $file = sprintf('%s/reporter-%s.txt', $this->outputDirectory, date('YmdHis'));
         }
         $this->file = new \SplFileObject($file, 'a');
-    }
-
-    /**
-     * @param array $item
-     */
-    public function write(array $item): void
-    {
-        $this->file->fwrite(implode(' - ', $item) . PHP_EOL);
     }
 }

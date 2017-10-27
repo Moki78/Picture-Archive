@@ -2,6 +2,8 @@
 
 namespace PictureArchiveBundle\Component\Report;
 
+use PictureArchiveBundle\Component\FileInfo;
+
 /**
  * Interface ReportInterface
  * @package PictureArchiveBundle\Component\Report
@@ -11,7 +13,11 @@ interface ReportInterface
     public function initialize(): void;
 
     /**
-     * @param array $item
+     * @param FileInfo $fileInfo
+     * @param null|string $status
+     * @param null|string $message
      */
-    public function write(array $item): void;
+    public function write(FileInfo $fileInfo, ?string $status, ?string $message): void;
+
+    public function finish(): void;
 }

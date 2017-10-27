@@ -8,6 +8,7 @@ services:
       - [ setImportMinimumFileAge, ["%picture_archive.import.minimum_fileage%"]]
       - [ setSupportedTypes, ["%picture_archive.supported_types%"]]
       - [ setTools, ["%picture_archive.tools%"]]
+      - [ addReporter, ["@picture_archive.import.report.stats"]]
 
   picture_archive.component.filepath_generator:
     class: PictureArchiveBundle\Component\FilepathGenerator
@@ -71,17 +72,19 @@ services:
     class: PictureArchiveBundle\Service\Import\Analyser\MediaDateIsset
 
   picture_archive.import.report:
-      class: PictureArchiveBundle\Service\Import\Report
-      arguments:
-            - "@picture_archive.component.configuration"
-      tags:
-        - { name: kernel.event_listener, event: picture-archive.import.initialize, method: startImport }
-        - { name: kernel.event_listener, event: picture-archive.import.analyse.failed, method: importFile }
-        - { name: kernel.event_listener, event: picture-archive.import.save.failed, method: importFile }
-        - { name: kernel.event_listener, event: picture-archive.import.success, method: importFile }
-        - { name: kernel.event_listener, event: picture-archive.import.error, method: importFile }
-        - { name: kernel.event_listener, event: picture-archive.import.finish, method: finishImport }
+    class: PictureArchiveBundle\Service\Import\Report
+    arguments:
+      - "@picture_archive.component.configuration"
+    tags:
+      - { name: kernel.event_listener, event: picture-archive.import.initialize, method: initialize }
+      - { name: kernel.event_listener, event: picture-archive.import.analyse.failed, method: sendToReporter }
+      - { name: kernel.event_listener, event: picture-archive.import.save.failed, method: sendToReporter }
+      - { name: kernel.event_listener, event: picture-archive.import.success, method: sendToReporter }
+      - { name: kernel.event_listener, event: picture-archive.import.error, method: sendToReporter }
+      - { name: kernel.event_listener, event: picture-archive.import.finish, method: finish }
 
+  picture_archive.import.report.stats:
+    class: PictureArchiveBundle\Component\Report\Stats
 
   picture_archive.import.file_processor:
     class: PictureArchiveBundle\Service\Import\FileProcessor
