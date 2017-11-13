@@ -1,7 +1,5 @@
-pa_app:
-    resource: "@PictureArchiveBundle/Resources/config/routing.yml"
-    prefix:   /
+picture_archive:
+    resource: "@PictureArchiveFrontendBundle/Resources/config/routing.yml"
 
-app:
-    resource: '@PictureArchiveBundle/Controller/'
-    type: annotation
+_liip_imagine:
+    resource: "@LiipImagineBundle/Resources/config/routing.xml"

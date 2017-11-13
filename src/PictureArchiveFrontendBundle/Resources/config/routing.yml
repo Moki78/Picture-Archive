@@ -1,0 +1,45 @@
+picture_archive_frontend_default_index:
+    path: /
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Default:index' }
+
+picture_archive_frontend_default_random_image:
+    path: /random-image
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Default:randomImage' }
+
+picture_archive_frontend_default_ajax_image:
+    path: /ajax/random-image
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Default:ajaxRandomImage' }
+
+
+picture_archive_frontend_admin_index:
+    path: /admin
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Admin:index' }
+
+picture_archive_frontend_admin_show:
+    path: /admin/{id}
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Admin:show' }
+    requirements:
+        id: '[0-9]+'
+
+picture_archive_frontend_admin_edit:
+    path: /admin/{id}/edit
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Admin:edit' }
+    requirements:
+        id: '[0-9]+'
+
+picture_archive_frontend_admin_new:
+    path: /admin/new
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Admin:new' }
+
+picture_archive_frontend_admin_delete:
+    path: /admin/{id}
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Admin:delete' }
+    methods: [DELETE]
+    requirements:
+        id: '[0-9]+'
+
+picture_archive_frontend_admin_download:
+    path: /admin/download/{id}
+    defaults: { _controller: 'PictureArchiveFrontendBundle:Admin:download' }
+    requirements:
+        id: '[0-9]+'

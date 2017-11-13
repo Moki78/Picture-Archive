@@ -1,0 +1,63 @@
+{% extends 'PictureArchiveFrontendBundle::base.html.twig' %}
+
+{% block body %}
+    <h1>Mediafiles list</h1>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Preview</th>
+            <th>Type</th>
+            <th>Hash</th>
+            <th>Path</th>
+            <th>Name</th>
+            <th>Mimetype</th>
+            <th>Status</th>
+            <th>Mediadate</th>
+            <th>Createdat</th>
+            <th>Updatedat</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for mediaFile in paginator %}
+
+            <tr>
+                <td>
+                    <a href="{{ path('picture_archive_frontend_admin_show', { 'id': mediaFile.id }) }}">{{ mediaFile.id }}</a>
+                <td>
+                    <a href="{{ path('picture_archive_frontend_admin_show', { 'id': mediaFile.id }) }}">
+                        <img src="{{ asset(mediaFile.path) | imagine_filter('thumbnail') }}">
+                    </a>
+                </td>
+                <td>{{ mediaFile.type }}</td>
+                <td>{{ mediaFile.hash }}</td>
+                <td>{{ mediaFile.path }}</td>
+                <td>{{ mediaFile.name }}</td>
+                <td>{{ mediaFile.mimeType }}</td>
+                <td>{{ mediaFile.status }}</td>
+                <td>{% if mediaFile.mediaDate %}{{ mediaFile.mediaDate|date('Y-m-d H:i:s') }}{% endif %}</td>
+                <td>{% if mediaFile.createdAt %}{{ mediaFile.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
+                <td>{% if mediaFile.updatedAt %}{{ mediaFile.updatedAt|date('Y-m-d H:i:s') }}{% endif %}</td>
+                <td>
+                    <ul>
+                        <li>
+                            <a href="{{ path('picture_archive_frontend_admin_show', { 'id': mediaFile.id }) }}">show</a>
+                        </li>
+                        <li>
+                            <a href="{{ path('picture_archive_frontend_admin_edit', { 'id': mediaFile.id }) }}">edit</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <ul>
+        <li>
+            <a href="{{ path('picture_archive_frontend_admin_new') }}">Create a new mediaFile</a>
+        </li>
+    </ul>
+{% endblock %}

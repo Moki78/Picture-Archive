@@ -1,0 +1,8 @@
+services:
+  picture_archive_frontend.service.pagination_builder:
+    class: PictureArchiveFrontendBundle\Service\PaginationBuilder
+    arguments:
+      - "@doctrine.orm.entity_manager"
+    calls:
+      - [ setLimit, [10] ]
+      - [ setOffset, [0]]

@@ -65,3 +65,50 @@ swiftmailer:
     username: '%mailer_user%'
     password: '%mailer_password%'
     spool: { type: memory }
+
+assetic:
+    debug:          '%kernel.debug%'
+    #use_controller: '%kernel.debug%'
+    use_controller: false
+    filters:
+        cssrewrite: ~
+
+liip_imagine:
+
+    loaders:
+        stream:
+            stream:
+                wrapper: 'file://%picture_archive.archive.base_directory%/'
+
+    # configure resolvers
+    resolvers:
+        # setup the default resolver
+        default:
+            # use the default web path
+            web_path: ~
+
+    # your filter sets are defined here
+    filter_sets:
+        # use the default cache configuration
+        cache: ~
+
+        thumbnail:
+            data_loader: stream
+            quality: 75
+            filters:
+                thumbnail: { size: [90, 90], mode: outbound }
+
+        small:
+            data_loader: stream
+            quality: 75
+            filters:
+                thumbnail: { size: [600, 600], mode: inset }
+
+        full:
+            cache: ~
+            data_loader: stream
+            quality: 75
+            filters:
+                thumbnail: { size: [1920, 1080], mode: inset }
+
+

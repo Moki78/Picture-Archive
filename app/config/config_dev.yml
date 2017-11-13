@@ -36,6 +36,7 @@ monolog:
         #chromephp:
         #    type: chromephp
         #    level: info
-
+twig:
+    cache: false
 #swiftmailer:
 #    delivery_addresses: ['me@example.com']

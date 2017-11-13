@@ -1,0 +1,69 @@
+{% extends 'PictureArchiveFrontendBundle::base.html.twig' %}
+
+{% block body %}
+    <h1>MediafileQ</h1>
+
+    <table>
+        <tbody>
+        <tr>
+            <th>Id</th>
+            <td>{{ mediaFile.id }}</td>
+        </tr>
+        <tr>
+            <th>Type</th>
+            <td>{{ mediaFile.type }}</td>
+        </tr>
+        <tr>
+            <th>Hash</th>
+            <td>{{ mediaFile.hash }}</td>
+        </tr>
+        <tr>
+            <th>Path</th>
+            <td>{{ mediaFile.path }}</td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td>{{ mediaFile.name }}</td>
+        </tr>
+        <tr>
+            <th>Mimetype</th>
+            <td>{{ mediaFile.mimeType }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>{{ mediaFile.status }}</td>
+        </tr>
+        <tr>
+            <th>Mediadate</th>
+            <td>{% if mediaFile.mediaDate %}{{ mediaFile.mediaDate|date('Y-m-d H:i:s') }}{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Createdat</th>
+            <td>{% if mediaFile.createdAt %}{{ mediaFile.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Updatedat</th>
+            <td>{% if mediaFile.updatedAt %}{{ mediaFile.updatedAt|date('Y-m-d H:i:s') }}{% endif %}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div>
+        <img src="{{ asset(mediaFile.path) | imagine_filter('small') }}">
+        <a href="{{ path('picture_archive_frontend_admin_download', {id: mediaFile.id}) }}">Download the MediaFile</a>
+    </div>
+
+    <ul>
+        <li>
+            <a href="{{ path('picture_archive_frontend_admin_index') }}">Back to the list</a>
+        </li>
+        <li>
+            <a href="{{ path('picture_archive_frontend_admin_edit', { 'id': mediaFile.id }) }}">Edit</a>
+        </li>
+        <li>
+            {{ form_start(delete_form) }}
+            <input type="submit" value="Delete">
+            {{ form_end(delete_form) }}
+        </li>
+    </ul>
+{% endblock %}

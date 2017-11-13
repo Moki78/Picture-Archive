@@ -1,0 +1,55 @@
+{% extends 'PictureArchiveFrontendBundle::base.html.twig' %}
+
+{% block body %}
+    <div>
+        <div class="picture-archive-slider">
+            <div class="picture-archive-slide"><img class="picture-archive-image  111" src="{{ path('picture_archive_frontend_default_random_image') }}?1"></div>
+            <div class="picture-archive-slide"><img class="picture-archive-image 222" src="{{ path('picture_archive_frontend_default_random_image') }}?2"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {% stylesheets filter='cssrewrite'
+    '@PictureArchiveFrontendBundle/Resources/public/css/*' %}
+    <link href="{{ asset_url }}" rel="stylesheet"/>
+    {% endstylesheets %}
+{% endblock %}
+
+{% block javascripts %}
+    {% javascripts
+    '@PictureArchiveFrontendBundle/Resources/public/js/jquery-3.2.1.min.js'
+    '@PictureArchiveFrontendBundle/Resources/public/js/slick.js' %}
+    <script src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+
+    <script>
+        $(document).ready(function(){
+            $('.picture-archive-slider')
+                .slick({
+                    mobileFirst: true,
+                    arrows: false,
+                    dots: true,
+                    infinite: true,
+                    speed: 500,
+                    fade: true,
+                    cssEase: 'linear',
+                    autoplay: true,
+                    autoplaySpeed: 5000
+                })
+                .on('beforeChange', function (currentSlide, nextSlide, index) {
+                    var image = $(nextSlide.$slides.get(index)).find('.picture-archive-image');
+
+                    $.ajax({
+                        url: '/ajax/random-image',
+                        type: 'get',
+                        async: false,
+                    })
+                    .done(function(data) {
+                        image.attr('src', data.link);
+                    });
+
+                });
+        });
+    </script>
+{% endblock %}
