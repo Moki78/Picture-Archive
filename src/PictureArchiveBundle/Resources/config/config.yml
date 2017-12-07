@@ -15,7 +15,7 @@ picture_archive:
     import:
         base_directory: '%picture_archive.import.base_directory%'
         failed_directory: '%picture_archive.import.failed_directory%'
-        minimum_fileage: 10000
+        minimum_fileage: 180
 
     tools:
         image_info: '%picture_archive.tool.image.info%'
